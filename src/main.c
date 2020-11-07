@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include "headers/pfc.h"
 
 int main() {
-    printf("Hello darkness my old friend.\n");
-    printf("Okay, let's make something great!\n");
+    handle_signal();
     return 0;
 }
