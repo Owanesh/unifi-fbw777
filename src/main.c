@@ -4,6 +4,7 @@
 #include "headers/pfc.h"
 
 int main() {
-    handle_signal();
+    PFC* pfc  = PFC__create("filedebllo.txt");
+    PFC_verbose(pfc);
     return 0;
 }
