@@ -6,6 +6,7 @@ void PFC__init(PFC *self, char *filename) {
     // open file with filename
     // read first latitude and longitude and create a PFCParamenters set
     self->latitude[0] = 1.1;
+    self->filename = filename;
 }
 
 void PFC__checkfilesize(PFC *self) {
@@ -35,9 +36,24 @@ void PFC_verbose(PFC *self) {
     printf("\tLongitude [1](current) \t %f\n", self->longitude[1]);
     printf("[debug/end] PFC_debug\n");
 }
+int exists(const char *fname)
+{
+    FILE *file;
+    if ((file = fopen(fname, "r")))
+    {
+        fclose(file);
+        return 1;
+    }
+    return 0;
+}
 
-void PFC_read() {
-    // read from file and return
+
+void PFC_read(PFC *self) {
+    char c[1000];
+    self->fpointer = fopen(self->filename, "r");
+    fscanf(self->fpointer, "%[^\n]", c);
+    printf("Data from the file:\n%s", c);
+    fclose(self->fpointer);
 }
 
 PFC *PFC__create(char *filename) {

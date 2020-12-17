@@ -18,7 +18,7 @@ typedef struct PFC {
 PFC* PFC__create(char *filename);
 void PFCParameter__update(PFCParameter *self, float speed, float distance);
 void PFC__destroy(PFC* pfc);
-void PFC_read();
+void PFC_read(PFC *self);
 void PFC__checkfilesize(PFC *self);
 void PFC_verbose(PFC *self);
 void comunicate_to_transducer(float speed);
