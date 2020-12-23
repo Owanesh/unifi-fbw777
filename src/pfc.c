@@ -1,19 +1,65 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "headers/pfc.h"
+#include "util/headers/utilities.h"
+#include "util/headers/constant.h"
+#include <signal.h>
+#include <unistd.h>
 
-void PFC__init(PFC *self, char *filename) {
-    // open file with filename
-    // read first latitude and longitude and create a PFCParamenters set
-    self->latitude[0] = 1.1;
-    self->filename = filename;
+void _Noreturn updatePosition(PFC *self, double latitude, double longitude, int timestamp) {
+    if (self->latitudes[0] == PFC_RESETVAL || self->longitudes[0] == PFC_RESETVAL) { // Maybe it's the first time
+        self->latitudes[0] = latitude;
+        self->longitudes[0] = longitude;
+        self->timestamps[0] = timestamp;
+    } else if (self->latitudes[0] != PFC_RESETVAL && self->latitudes[1] == PFC_RESETVAL) {// Second access
+        self->latitudes[1] = latitude;
+        self->longitudes[1] = longitude;
+        self->timestamps[1] = timestamp;
+    } else if (self->latitudes[0] != PFC_RESETVAL && self->latitudes[1] != PFC_RESETVAL) { //swap and update
+        self->latitudes[0] = self->latitudes[1];
+        self->longitudes[0] = self->longitudes[1];
+        self->timestamps[0] = self->timestamps[1];
+        self->latitudes[1] = latitude;
+        self->longitudes[1] = longitude;
+        self->timestamps[1] = timestamp;
+    }
 }
 
-void PFC__checkfilesize(PFC *self) {
+void signalHandler(int sig) {
+    switch (sig) {
+        case SIGSTOP:
+            break;
+        case SIGINT:
+            break;
+
+        case SIGCONT:
+            break;
+        case SIGUSR1:
+            // TODO: altera il valore del prossimo calcolo della velocità,
+            //  effettuando un left shift di 2 bits della velocità calcolata
+            //  una volta arrotondata all’intero più vicino.
+            break;
+
+    }
+}
+
+void PFC__init(PFC *self, char *filename) {
+    // TODO; read first latitude and longitude and create a PFCParamenters set
+    PFC__reset(self);
+    if (!fileExists(filename)) {
+        fprintf(stderr, "[ERR] Error during file opening '%s'\n", filename);
+    } else {
+        self->filename = filename;
+        self->filesize = PFC_RESETVAL;
+    }
+}
+
+void PFC__checkFilesize(PFC *self) {
     long prev = ftell(self->fpointer);
     fseek(self->fpointer, 0, SEEK_END); // seek to end of file
     long size = ftell(self->fpointer);
-    self->filesize = (self->filesize != 0)?:size;
+    if (self->filesize == PFC_RESETVAL) self->filesize = size;
     if (self->filesize != size) {
         fprintf(stderr, "[ERR] Filesize was changed in runtime\n");
         exit(EXIT_FAILURE);
@@ -21,54 +67,57 @@ void PFC__checkfilesize(PFC *self) {
     fseek(self->fpointer, prev, SEEK_SET);
 }
 
-void PFCParameter__update(PFCParameter *self, float speed, float distance) {
+void _Noreturn PFCParameter__update(PFCParameter *self, float speed, float distance) {
     self->speed = speed;
     self->distance = distance;
 }
 
-void PFC_verbose(PFC *self) {
-    printf("[debug] PFC_debug \n");
-    printf("\tPFCparam-> speed \t %f\n", self->param.speed);
-    printf("\tPFCparam-> distance \t %f\n", self->param.distance);
-    printf("\tLatitude [0](last) \t %f\n", self->latitude[0]);
-    printf("\tLatitude [1](current) \t %f\n", self->latitude[1]);
-    printf("\tLongitude [0](last) \t %f\n", self->longitude[0]);
-    printf("\tLongitude [1](current) \t %f\n", self->longitude[1]);
-    printf("[debug/end] PFC_debug\n");
-}
-int exists(const char *fname)
-{
-    FILE *file;
-    if ((file = fopen(fname, "r")))
-    {
-        fclose(file);
-        return 1;
-    }
-    return 0;
-}
-
-
 void PFC_read(PFC *self) {
-    char c[1000];
+    char *line_buf = NULL;
+    size_t line_buf_size = 0;
+    int line_count = 0;
+    ssize_t line_size = 0;
     self->fpointer = fopen(self->filename, "r");
-    fscanf(self->fpointer, "%[^\n]", c);
-    printf("Data from the file:\n%s", c);
+    /* Get the first line of the file. */
+    while (line_size >= 0) {
+        line_size = getline(&line_buf, &line_buf_size, self->fpointer);
+        /* Loop through until we are done with the file. */
+        while (line_size >= 0) {
+            line_count++;
+            if (strContains(EMEA_GPGLL, line_buf)) {
+                sleep(1);
+                PFC__checkFilesize(self);
+                //char **splittedLineBuffer = strSplit(line_buf, ",");
+            }
+            //printf("Line[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", line_count,
+            //       line_size, line_buf_size, line_buf);
+            line_size = getline(&line_buf, &line_buf_size, self->fpointer);
+        }
+    }
+    /* Free the allocated line buffer */
+    free(line_buf);
+    line_buf = NULL;
+    /* Close the file now that we are done with it */
     fclose(self->fpointer);
 }
 
 PFC *PFC__create(char *filename) {
     PFC *pfc = (PFC *) malloc(sizeof(PFC)); //also include PFCParameter (8byte)
     PFC__init(pfc, filename);
-
-    // read from file
+    // PFC_read(pfc);
     // create pfcparameter with speed and distance calculated
-    // PFCParameter__update(&(pfc->param), 1.4, 5.3);
     return pfc;
 }
 
-
 void PFC__reset(PFC *self) {
-    /* remove any filepointer linked */
+    if (self->fpointer != NULL) {
+        fclose(self->fpointer);
+        self->filesize = PFC_RESETVAL;
+        self->filename = "";
+    }
+    self->latitudes[0], self->latitudes[1] = PFC_RESETVAL;
+    self->longitudes[0], self->longitudes[1] = PFC_RESETVAL;
+    self->timestamps[0], self->timestamps[1] = PFC_RESETVAL;
 }
 
 void PFC__destroy(PFC *pfc) {

@@ -6,7 +6,7 @@
 
 int main() {
     PFC* pfc  = PFC__create("../resources/G18.txt");
-    PFC_verbose(pfc);
+
     PFC_read(pfc);
     return 0;
 }

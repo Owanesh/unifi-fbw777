@@ -10,17 +10,14 @@ typedef struct PFC {
     FILE *fpointer;
     char *filename;
     long filesize;
-    float latitude[2]; // last[0], current[1]
-    float longitude[2];
+    double latitudes[2]; // last[0], current[1]
+    double longitudes[2];
+    int timestamps[2];
     PFCParameter param;
 } PFC;
 
 PFC* PFC__create(char *filename);
-void PFCParameter__update(PFCParameter *self, float speed, float distance);
-void PFC__destroy(PFC* pfc);
 void PFC_read(PFC *self);
-void PFC__checkfilesize(PFC *self);
-void PFC_verbose(PFC *self);
-void comunicate_to_transducer(float speed);
-
+void _Noreturn updateCoordinates(PFC *self, double latitude, double longitude, int timestamp);
+void PFC__reset(PFC *self);
 #endif //UNIFI_FBW777_PFC_H
