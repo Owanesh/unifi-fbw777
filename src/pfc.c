@@ -49,8 +49,8 @@ void signalHandler(int sig) {
     }
 }
 
-void PFC__init(PFC *self, char *filename) {
-
+void PFC__init(PFC *self, char *filename, char *name) {
+    self->name = name;
     // TODO; read first latitude and longitude and create a PFCParamenters set
     PFC__reset(self);
     if (!fileExists(filename)) {
@@ -109,15 +109,16 @@ void PFC_read(PFC *self) {
             line_count++;
             if (strContains(EMEA_GPGLL, line_buf)) {
                 sleep(READ_SPEED); // once per second
-                /*printf("\nLine[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", line_count,
-                    line_size, line_buf_size, line_buf);*/
+                /*printf("\ni'm %s == Line[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", self->name, line_count,
+                       line_size, line_buf_size, line_buf);*/
                 PFC__checkFilesize(self);
                 gpgll2PFCParameters(line_buf, self);
-                printf("I'm at %f km/h and i've already done %f km\n",self->param.speed,self->param.distance);
+                // printf("I'm %s and i'm at %f km/h and i've already done %f km\n", self->name, self->param.speed,
+                // self->param.distance);
 
             }
-            //printf("\nLine[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", line_count,
-            //line_size, line_buf_size, line_buf);
+            /*printf("\n\t I'm %s == Line[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", self->name, line_count,
+                line_size, line_buf_size, line_buf);*/
             line_size = getline(&line_buf, &line_buf_size, self->fpointer);
         }
     }
@@ -128,11 +129,9 @@ void PFC_read(PFC *self) {
     fclose(self->fpointer);
 }
 
-PFC *PFC__create(char *filename) {
-    PFC *pfc = (PFC *) malloc(sizeof(PFC)); //also include PFCParameter (8byte)
-    PFC__init(pfc, filename);
-    // PFC_read(pfc);
-    // create pfcparameter with speed and distance calculated
+PFC *PFC__create(char *filename, char *name) {
+    PFC *pfc = (PFC *) malloc(sizeof(PFC));
+    PFC__init(pfc, filename, name);
     return pfc;
 }
 

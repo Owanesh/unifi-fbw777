@@ -7,6 +7,7 @@ typedef struct {
 } PFCParameter;
 
 typedef struct PFC {
+    char *name;
     FILE *fpointer;
     char *filename;
     long filesize;
@@ -16,7 +17,7 @@ typedef struct PFC {
     PFCParameter param;
 } PFC;
 
-PFC* PFC__create(char *filename);
+PFC *PFC__create(char *filename, char *name);
 void PFC_read(PFC *self);
 void _Noreturn updateCoordinates(PFC *self, double latitude, double longitude, int timestamp);
 void PFC__reset(PFC *self);

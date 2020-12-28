@@ -5,7 +5,7 @@
 #ifndef UNIFI_FBW777_CONSTANT_H
 #define UNIFI_FBW777_CONSTANT_H
 
-#define READ_SPEED 0.5
+#define READ_SPEED 1
 
 /*:: EMEA Standard Codes   :*/
 #define EMEA_GPGLL "$GPGLL"
