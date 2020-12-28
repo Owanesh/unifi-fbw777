@@ -13,7 +13,7 @@ double rad2deg(double);
 
 /*:: String manipulation :*/
 bool strContains(const char * search, const char *content);
-char **strSplit(char *buffer, char *separator);
+void strSplit(char *buffer, char *separator, char **array);
 double str2double(char *string);
 int strTokenCount(char *buffer, char token);
 

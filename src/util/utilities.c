@@ -17,6 +17,7 @@
 /*::                  'N' is nautical miles               0.8684             :*/
 
 double distanceBetweenPoints(double lat1, double lon1, double lat2, double lon2, char unit) {
+    //printf(" \n 🍎 distanceBetweenPoints %f lat1, %f lon1, %f lat2, %f lon2, %c unit",lat1,lon1,lat2,lon2,unit);
     double theta, dist;
     if ((lat1 == lat2) && (lon1 == lon2)) {
         return 0;
@@ -58,12 +59,14 @@ double rad2deg(double rad) {
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*::  This function converts a string into double number            :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-double str2double(char *string){
-    char *ptr;
+double str2double(char *string) {
+    char *rest;
     double ret;
-    ret = strtod(string, &ptr);
+    ret = strtod(string, &rest);
     return ret;
 }
+
+
 
 
 
@@ -75,6 +78,7 @@ double str2double(char *string){
 /*::           where: 'M' is miles    (default)                              :*/
 /*::                  'K' is kilometers per hour                             :*/
 double speedBetweenPoints(int timestamp1, int timestamp2, double distance, char unit) {
+    //printf(" \n 🧩 speedBetweenPoints %d timestamp1, %d timestamp2, %f distance, %c unit",timestamp1,timestamp2,distance,unit);
     double time_between = (timestamp2 - timestamp1) / 1000.0;
     double speed = distance / time_between;
     switch (unit) {
@@ -123,15 +127,12 @@ int strTokenCount(char *buffer, char token) {
     return count;
 }
 
-char **strSplit(char *buffer, char *separator) {
+void strSplit(char *buffer, char *separator, char **array) {
     int i = 0;
-    int tokenFinded = strTokenCount(buffer, (char) separator);
     char *p = strtok(buffer, separator);
-    char **array[tokenFinded];
     while (p != NULL) {
         array[i] = p;
         i++;
         p = strtok(NULL, separator);
     }
-    return array;
 }

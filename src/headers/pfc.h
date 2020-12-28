@@ -2,8 +2,8 @@
 #define UNIFI_FBW777_PFC_H
 
 typedef struct {
-    float distance;
-    float speed;
+    double distance;
+    double speed;
 } PFCParameter;
 
 typedef struct PFC {
