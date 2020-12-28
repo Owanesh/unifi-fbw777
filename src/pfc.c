@@ -113,9 +113,6 @@ void PFC_read(PFC *self) {
                        line_size, line_buf_size, line_buf);*/
                 PFC__checkFilesize(self);
                 gpgll2PFCParameters(line_buf, self);
-                // printf("I'm %s and i'm at %f km/h and i've already done %f km\n", self->name, self->param.speed,
-                // self->param.distance);
-
             }
             /*printf("\n\t I'm %s == Line[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", self->name, line_count,
                 line_size, line_buf_size, line_buf);*/
