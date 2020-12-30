@@ -8,12 +8,10 @@
 #include "pfc.h"
 
 typedef struct {
-    /*
-     * PFC[3] PFCsList
-     */
-} Trasducer;
+    PFCParameter data[3];
+} Transducers;
 
 
-void trasducerLog(PFC pfc);
+
 
 #endif //UNIFI_FBW777_TRASDUCERS_H
