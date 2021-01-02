@@ -4,21 +4,35 @@
 #include "headers/pfc.h"
 #include "util/headers/utilities.h"
 #include "util/headers/constant.h"
+#include "util/headers/signals.h"
 #include <signal.h>
 #include <unistd.h>
+#include <math.h>
+#include <time.h>
 
-bool updatePosition(PFC *self, double latitude, double longitude, int timestamp) {
-    bool needUpdatePFCParameters = false;
+void PFC__init(PFC *self, char *filename, char *name);
+void PFC__reset(PFC *self);
+void PFC__backupFPointer(PFC *self);
+
+
+/* :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*:: UpdatePosition allows to update arrays referred to PFC's GPGLL */
+/*::     PFC *self : Reference to PFC object                        */
+/*::     Other parameters according to GPGLL:                       */
+/*::        double latitude, longitude                              */
+/*::        int timestamp                                           */
+/*::     Return: bool -> necessity to update PFCParameters          */
+/* :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+bool updatePosition(PFC *self, double latitude, double longitude, long timestamp) {
     if (self->latitudes[0] == PFC_RESETVAL || self->longitudes[0] == PFC_RESETVAL) { // Maybe it's the first time
         self->latitudes[0] = latitude;
         self->longitudes[0] = longitude;
         self->timestamps[0] = timestamp;
-        needUpdatePFCParameters = false;
     } else if (self->latitudes[0] != PFC_RESETVAL && self->latitudes[1] == PFC_RESETVAL) {// Second access
         self->latitudes[1] = latitude;
         self->longitudes[1] = longitude;
         self->timestamps[1] = timestamp;
-        needUpdatePFCParameters = true;
+        return true;
     } else if (self->latitudes[0] != PFC_RESETVAL && self->latitudes[1] != PFC_RESETVAL) { //swap and update
         self->latitudes[0] = self->latitudes[1];
         self->longitudes[0] = self->longitudes[1];
@@ -26,73 +40,62 @@ bool updatePosition(PFC *self, double latitude, double longitude, int timestamp)
         self->latitudes[1] = latitude;
         self->longitudes[1] = longitude;
         self->timestamps[1] = timestamp;
-        needUpdatePFCParameters = true;
+        return true;
     }
-    return needUpdatePFCParameters;
+    return false;
 }
 
-void signalHandler(int sig) {
-    switch (sig) {
-        case SIGSTOP:
-            break;
-        case SIGINT:
-            break;
+bool needIShiftLeft(pid_t selfpid){
+    // TODO: implement an "alert" for FailureGenerator and SIGUSR1 signal handling
+    return false;
+}
 
-        case SIGCONT:
-            break;
-        case SIGUSR1:
-            // TODO: altera il valore del prossimo calcolo della velocità,
-            //  effettuando un left shift di 2 bits della velocità calcolata
-            //  una volta arrotondata all’intero più vicino.
-            break;
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  Set speed and distance into PFCParameter of self pointer      :*/
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+void PFCParameter__update(PFC *self, double speed, double distance) {
+    // TODO: check if i need to shift two bits cause of SIGUSR1 signal received // speed<<2
+    self->param.speed = speed>+0?speed:0; //prevent negative speed or attack
+    self->param.distance = distance>+0?distance:0;
+}
 
+/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  Convert a GPGLL line into parameters for PFC reference pointer :*/
+/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+void gpgll2PFCParameters(char *line, PFC *self) {
+    int tokenFinded = strTokenCount(line, EMEA_SEP[0]);
+    char **splittedLineBuffer[tokenFinded];
+    strSplit(line, EMEA_SEP, (char **) splittedLineBuffer);
+    if (updatePosition(self,
+                       str2double((char *) splittedLineBuffer[1]),
+                       str2double((char *) splittedLineBuffer[3]),
+                       atol((char *)splittedLineBuffer[5]))) {
+        double speed = speedBetweenPoints(self->timestamps[0],
+                                          self->timestamps[1],
+                                          self->param.distance);
+        double distance = distanceBetweenPoints(self->latitudes[0],
+                                                self->longitudes[0],
+                                                self->latitudes[1],
+                                                self->longitudes[1]);
+        PFCParameter__update(self, speed, distance);
     }
 }
 
-void PFC__init(PFC *self, char *filename, char *name) {
-    self->name = name;
-    // TODO; read first latitude and longitude and create a PFCParamenters set
-    PFC__reset(self);
-    if (!fileExists(filename)) {
-        fprintf(stderr, "[ERR] Error during file opening '%s'\n", filename);
-    } else {
-        self->filename = filename;
-        self->filesize = PFC_RESETVAL;
-    }
-}
-
+/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  Security check. Filesize is duplicated in each PFC, if anyone  :*/
+/*::  modify a line during the execution of program, it stops with   :*/
+/*::  exit(EXIT_FAILURE);                                            :*/
+/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 void PFC__checkFilesize(PFC *self) {
     long prev = ftell(self->fpointer);
     fseek(self->fpointer, 0, SEEK_END); // seek to end of file
     long size = ftell(self->fpointer);
     if (self->filesize == PFC_RESETVAL) self->filesize = size;
     if (self->filesize != size) {
-        fprintf(stderr, "[ERR] Filesize was changed in runtime\n");
+        fprintf(stderr, "[ERR] [%s] Filesize was changed in runtime\n",self->name);
         exit(EXIT_FAILURE);
     }
     fseek(self->fpointer, prev, SEEK_SET);
-}
-
-void PFCParameter__update(PFCParameter *self, float speed, float distance) {
-    self->speed = speed;
-    self->distance = distance;
-}
-
-void gpgll2PFCParameters(char *line, PFC *self) {
-    int tokenFinded = strTokenCount(line, EMEA_SEP[0]);
-    char **splittedLineBuffer[tokenFinded];
-    strSplit(line, EMEA_SEP, (char **) splittedLineBuffer);
-    if (updatePosition(self, str2double((char *) splittedLineBuffer[1]), str2double((char *) splittedLineBuffer[3]),
-                       atoi((const char *) splittedLineBuffer[5]))) {
-        self->param.distance = distanceBetweenPoints(self->latitudes[0], self->longitudes[0], self->latitudes[1],
-                                                     self->longitudes[1], MEASURE_UNIT);
-
-        self->param.speed = speedBetweenPoints(self->timestamps[0], self->timestamps[1], self->param.distance,
-                                               MEASURE_UNIT);
-
-    }
-
-
 }
 
 void PFC_read(PFC *self) {
@@ -108,9 +111,11 @@ void PFC_read(PFC *self) {
         while (line_size >= 0) {
             line_count++;
             if (strContains(EMEA_GPGLL, line_buf)) {
-                sleep(READ_SPEED); // once per second
-                /*printf("\ni'm %s == Line[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", self->name, line_count,
-                       line_size, line_buf_size, line_buf);*/
+                PFC__backupFPointer(self);
+                usleep(READ_SPEED);
+                /*
+                 * printf("\ni'm %s == Line[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", self->name, line_count,
+                     line_size, line_buf_size, line_buf);*/
                 PFC__checkFilesize(self);
                 gpgll2PFCParameters(line_buf, self);
             }
@@ -119,24 +124,50 @@ void PFC_read(PFC *self) {
             line_size = getline(&line_buf, &line_buf_size, self->fpointer);
         }
     }
-    /* Free the allocated line buffer */
-    free(line_buf);
+
+    free(line_buf); // Free the allocated line buffer
     line_buf = NULL;
-    /* Close the file now that we are done with it */
-    fclose(self->fpointer);
+    fclose(self->fpointer); // Close the file now that we are done with it
 }
 
-PFC *PFC__create(char *filename, char *name) {
+void PFC__init(PFC *self, char *filename, char *name) {
+    self->name = name;
+    PFC__reset(self);
+    if (!fileExists(filename)) {
+        fprintf(stderr, "[ERR] Error during file opening '%s'\n", filename);
+    } else {
+        self->filename = filename;
+        self->filesize = FILESIZE_RESET;
+    }
+    // redefines handler for these signals
+}
+
+PFC *PFC__create(char *filename, char *name, pid_t pid) {
     PFC *pfc = (PFC *) malloc(sizeof(PFC));
     PFC__init(pfc, filename, name);
+    pfc->selfpid = pid;
     return pfc;
 }
+
+void PFC__destroy(PFC *self) {
+    if (self) {
+        printf("Destroying %s PFC who has pid %d \n",self->name,self->selfpid);
+        PFC__reset(self);
+        free(self);
+    }
+}
+
+void PFC__backupFPointer(PFC *self){
+    self->seekpoint = ftell(self->fpointer);
+}
+
 
 void PFC__reset(PFC *self) {
     if (self->fpointer != NULL) {
         fclose(self->fpointer);
-        self->filesize = PFC_RESETVAL;
+        self->filesize = FILESIZE_RESET;
         self->filename = "";
+        self->seekpoint = FILESIZE_RESET;
     }
     self->latitudes[0] = PFC_RESETVAL;
     self->latitudes[1] = PFC_RESETVAL;
@@ -145,11 +176,3 @@ void PFC__reset(PFC *self) {
     self->timestamps[0] = PFC_RESETVAL;
     self->timestamps[1] = PFC_RESETVAL;
 }
-
-void PFC__destroy(PFC *pfc) {
-    if (pfc) {
-        PFC__reset(pfc);
-        free(pfc);
-    }
-}
-

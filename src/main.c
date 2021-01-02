@@ -2,45 +2,43 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "headers/pfc.h"
+#include "util/headers/utilities.h"
+#include <signal.h>
+#include "util/headers/signals.h"
 
-void welcomeMessage() {
-    printf("\033[0;35m");
-    printf("\n"
-           "┌─┐┬ ┬ ┬┌┐ ┬ ┬┬ ┬┬┬─┐┌─┐\n"
-           "├┤ │ └┬┘├┴┐└┬┘││││├┬┘├┤ \n"
-           "└  ┴─┘┴ └─┘ ┴ └┴┘┴┴└─└─┘\n"
-           "");
-    printf("\033[;36m© 2020 Owanesh\n");
-    printf("\033[1;32m========================\n");
-    printf("\033[0m");
-}
 
-int main() {
-    char *filename = "../resources/G18.txt";
+int main(int argc, char *argv[]) {
+    bool needshift = false;
+    char *filename = checkFileIntoMainArgs(argc, argv);
+    printf("Data location : %s\n", filename);
     welcomeMessage();
-    pid_t child1, child2, child3;
-    if (!(child1 = fork())) {
-        PFC *alpha = PFC__create(filename, "Alpha");
-        sleep(3);
+    pid_t PFC_list[3];
+    if (!(PFC_list[0] = fork())) {
+        signal(SIGUSR1, handle_sigUSR1);
+        PFC *alpha = PFC__create(filename, "Alpha", getpid());
+        sleep(2);
         PFC_read(alpha);
+        PFC__destroy(alpha);
         exit(0);
-    } else if (!(child2 = fork())) {
-        PFC *bravo = PFC__create(filename, "Bravo");
-        sleep(3);
+    } else if (!(PFC_list[1] = fork())) {
+        PFC *bravo = PFC__create(filename, "Bravo", getpid());
+        sleep(2);
         PFC_read(bravo);
+        PFC__destroy(bravo);
         exit(0);
-    } else if (!(child3 = fork())) {
-        PFC *charlie = PFC__create(filename, "Charlie");
-        sleep(3);
+    } else if (!(PFC_list[2] = fork())) {
+        PFC *charlie = PFC__create(filename, "Charlie", getpid());
+        sleep(2);
         PFC_read(charlie);
+        PFC__destroy(charlie);
         exit(0);
     } else {
-        wait(&child1);
-        //printf("End of process Alpha\n");
-        wait(&child2);
-        //printf("End of process Bravo\n");
-        wait(&child3);
-        //printf("End of process Charlie\n");
+        kill(PFC_list[0], SIGUSR1);
+        sleep(2);
+        wait(&PFC_list[1]);
+        wait(&PFC_list[2]);
+        wait(&PFC_list[0]);
+
     }
     return 0;
 }
