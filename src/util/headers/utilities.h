@@ -1,6 +1,7 @@
 #ifndef UNIFI_FBW777_UTILITIES_H
 #define UNIFI_FBW777_UTILITIES_H
 #include <stdio.h>
+#include <stdlib.h>
 
 /*:: Definition of Boolean Type  :*/
 #define bool int
@@ -31,4 +32,7 @@ double speedBetweenPoints(int timestamp1, int timestamp2, double distance);
 /*:: Improve Ui/Ux :*/
 char *checkFileIntoMainArgs(int argc, char *argv[]);
 void welcomeMessage();
-#endif //UNIFI_FBW777_UTILITIES_H
+
+/*:: Array manipulation :*/
+int getIndexOfPFCList(pid_t PFC_pid, pid_t *PFC_list, int position);
+#endif

@@ -1,7 +1,7 @@
 #ifndef UNIFI_FBW777_SIGNALS_H
 #define UNIFI_FBW777_SIGNALS_H
 
-#include "../../headers/pfc.h"
+#include "../../headers/failureGenerator.h"
 
 typedef void (*sighandler_t)(int);
 

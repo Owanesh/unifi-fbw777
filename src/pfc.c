@@ -4,10 +4,8 @@
 #include "headers/pfc.h"
 #include "util/headers/utilities.h"
 #include "util/headers/constant.h"
-#include "util/headers/signals.h"
 #include <signal.h>
 #include <unistd.h>
-#include <math.h>
 #include <time.h>
 
 void PFC__init(PFC *self, char *filename, char *name);
@@ -142,10 +140,10 @@ void PFC__init(PFC *self, char *filename, char *name) {
     // redefines handler for these signals
 }
 
-PFC *PFC__create(char *filename, char *name, pid_t pid) {
+PFC *PFC__create(char *filename, char *name) {
     PFC *pfc = (PFC *) malloc(sizeof(PFC));
     PFC__init(pfc, filename, name);
-    pfc->selfpid = pid;
+    pfc->selfpid = getpid();
     return pfc;
 }
 
@@ -153,6 +151,7 @@ void PFC__destroy(PFC *self) {
     if (self) {
         printf("Destroying %s PFC who has pid %d \n",self->name,self->selfpid);
         PFC__reset(self);
+        kill(SIGQUIT,self->selfpid);
         free(self);
     }
 }

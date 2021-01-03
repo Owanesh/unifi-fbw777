@@ -20,7 +20,7 @@ typedef struct PFC {
     PFCParameter param;
 } PFC;
 
-PFC *PFC__create(char *filename, char *name, pid_t pid);
+PFC *PFC__create(char *filename, char *name);
 void PFC_read(PFC *self);
 void  PFC__destroy(PFC *self);
 #endif //UNIFI_FBW777_PFC_H

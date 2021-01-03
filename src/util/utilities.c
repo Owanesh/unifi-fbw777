@@ -14,7 +14,7 @@
 /*::    lat2, lon2 = Latitude and Longitude of point 2 (in decimal degrees)  :*/
 /*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 double distanceBetweenPoints(double lat1, double lon1, double lat2, double lon2) {
-    double earthRadius_km = EARTH_RADIUS*1e3;
+    double earthRadius_km = EARTH_RADIUS * 1e3;
     double diffLat, diffLon, radLat1, radLat2, alpha, bravo, charlie;
     diffLat = deg2rad(lat2 - lat1);
     diffLon = deg2rad(lon2 - lon1);
@@ -57,7 +57,7 @@ double str2double(char *string) {
 /*::      distance = calculated distance between points                      :*/
 /*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 double speedBetweenPoints(int timestamp1, int timestamp2, double distance) {
-    return timestamp2 > timestamp1?( distance / (timestamp2 - timestamp1)):0;
+    return timestamp2 > timestamp1 ? (distance / (timestamp2 - timestamp1)) : 0;
 }
 
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
@@ -160,13 +160,13 @@ void welcomeMessage() {
 /*::      if filepath is invalid or file does not exist, will use   :*/
 /*::      internal file stored in /resources/G18.txt                :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-char *checkFileIntoMainArgs(int argc, char *argv[]){
+char *checkFileIntoMainArgs(int argc, char *argv[]) {
     if (argc == 2) {
         printf("The argument supplied is %s\n", argv[1]);
         if (fileExists(argv[1])) {
             return argv[1];
         } else {
-            printf("File %s not exist or is invalid. Using default...\n",argv[1]);
+            printf("File %s not exist or is invalid. Using default...\n", argv[1]);
         }
     } else if (argc > 2) {
         printf("Too many arguments supplied  - Using default...\n");
@@ -174,4 +174,19 @@ char *checkFileIntoMainArgs(int argc, char *argv[]){
         printf("No external G18 was provided - Using default...\n");
     }
     return "../resources/G18.txt";
+}
+
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  Get index of position element in array   (recursive):*/
+/*::      PFC_pid: element to find                        :*/
+/*::      PFC_list: array of elements                     :*/
+/*::      position : position, needs to be 0 at calling.  :*/
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+int getIndexOfPFCList(pid_t PFC_pid, pid_t *PFC_list, int position) {
+    if (PFC_pid == 0)
+        return -1;
+    else if (PFC_pid == PFC_list[position])
+        return position;
+    else
+        return getIndexOfPFCList(PFC_pid, PFC_list, ++position);
 }
