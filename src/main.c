@@ -4,6 +4,8 @@
 #include "headers/pfc.h"
 #include "headers/failureGenerator.h"
 #include "util/headers/utilities.h"
+#include "util/headers/signals.h"
+#include "util/headers/constant.h"
 #include <signal.h>
 
 
@@ -26,16 +28,19 @@ int main(int argc, char *argv[]) {
     PFC_list[2] = PFC__create(filename, "Charlie");
 
     FailureGen *fgen = FailureGen__create();
+
+
+
     if (!(PFC_pid_list[0] = fork())) {
         PFC_list[0]->selfpid = getpid();
         close(alpha_pipe[0]);
         write(alpha_pipe[1],PFC_list[0], sizeof(PFC *));
         close(alpha_pipe[1]);
 
-        usleep(2);
+        sleep(3);
         PFC_read(PFC_list[0]);
         PFC__destroy(PFC_list[0]);
-        exit(0);
+        //exit(0);
 
     } else if (!(PFC_pid_list[1] = fork())) {
         PFC_list[1]->selfpid = getpid();
@@ -43,33 +48,39 @@ int main(int argc, char *argv[]) {
         write(bravo_pipe[1],PFC_list[1], sizeof(PFC *));
         close(bravo_pipe[1]);
 
-        sleep(2);
+        sleep(3);
         PFC_read(PFC_list[1]);
         PFC__destroy(PFC_list[1]);
-        exit(0);
+        //exit(0);
 
     } else if (!(PFC_pid_list[2] = fork())) {
+
         PFC_list[2]->selfpid = getpid();
         close(charlie_pipe[0]);
         write(charlie_pipe[1], PFC_list[2], sizeof(PFC *));
         close(charlie_pipe[1]);
 
-        sleep(2);
+        sleep(3);
         PFC_read(PFC_list[2]);
         PFC__destroy(PFC_list[2]);
-        exit(0);
+        //exit(0);
 
     } else {
+        printf("aeroplanetty.getpid() >>> %d\n",getpid());
         close(alpha_pipe[1]);
         read(alpha_pipe[0], PFC_list[0], sizeof(PFC *));
         close(alpha_pipe[0]);
+
         close(bravo_pipe[1]);
         read(bravo_pipe[0], PFC_list[1], sizeof(PFC *));
         close(bravo_pipe[0]);
+
         close(charlie_pipe[1]);
         read(charlie_pipe[0], PFC_list[2], sizeof(PFC *));
         close(charlie_pipe[0]);
+        sleep(1);
         FailureGen__init(fgen, PFC_list);
+
 
         wait(&PFC_pid_list[0]);
         wait(&PFC_pid_list[1]);

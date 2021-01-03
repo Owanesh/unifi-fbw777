@@ -4,6 +4,7 @@
 #include "headers/pfc.h"
 #include "util/headers/utilities.h"
 #include "util/headers/constant.h"
+#include "util/headers/signals.h"
 #include <signal.h>
 #include <unistd.h>
 #include <time.h>
@@ -141,6 +142,8 @@ void PFC__init(PFC *self, char *filename, char *name) {
 }
 
 PFC *PFC__create(char *filename, char *name) {
+    signal(SIGUSR1,handle_sigUSR1);
+
     PFC *pfc = (PFC *) malloc(sizeof(PFC));
     PFC__init(pfc, filename, name);
     pfc->selfpid = getpid();

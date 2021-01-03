@@ -3,9 +3,9 @@
 #include "headers/failureGenerator.h"
 
 
- _Noreturn void setShiftFor(pid_t destinationprocess) {
-    pid_t backShifter =0;
-    while (1){
+_Noreturn void setShiftFor(pid_t destinationprocess) {
+    pid_t backShifter = 0;
+    while (1) {
         usleep(READ_SPEED);
     }
 }
@@ -17,7 +17,7 @@ bool isProbability(int elevation, short number) {
 bool isSignalSendedTo(int signum, int probability, pid_t destinationProcess) {
     if (isProbability((int) probability, PROBABILITY_NUMBER)) {
         // TODO: check if process is alive or blocked.
-        kill(signum, destinationProcess);
+        kill(destinationProcess, signum);
         return true;
     }
     return false;
@@ -40,7 +40,7 @@ void sendAndLog(int signum, pid_t destinationProcess) {
             break;
     }
     if (isSignalSendedTo(signum, probability, destinationProcess)) {
-       printf("🟢🟢🟢 Signal %d to pid %d\n",signum,destinationProcess);
+        printf("[LOG] send signum %d to pid %d\n",signum,destinationProcess);
         // TODO: logtofile each signal
     }
 }
@@ -51,13 +51,12 @@ _Noreturn void choosePFCandSignal(FailureGen *self) {
         int pickIndex = 0;
         for (int india = 0; india < 4; india++) {
             pickIndex = random_number(0, 2);
-            printf("🥶 trying sign %d (%d) to index %d || yes it is %s\n",self->signals[india],india,pickIndex,(*self->PFC_list[pickIndex])->name);
             sendAndLog(self->signals[india], (*self->PFC_list[pickIndex])->selfpid);
         }
     }
 }
 
-void FailureGen__init(FailureGen *self,  PFC *PFC_list[3]) {
+void FailureGen__init(FailureGen *self, PFC *PFC_list[3]) {
     self->PFC_list[0] = &PFC_list[0];
     self->PFC_list[1] = &PFC_list[1];
     self->PFC_list[2] = &PFC_list[2];
@@ -65,8 +64,7 @@ void FailureGen__init(FailureGen *self,  PFC *PFC_list[3]) {
 }
 
 
-FailureGen * FailureGen__create(){
-
+FailureGen *FailureGen__create() {
     FailureGen *fgen = (FailureGen *) malloc(sizeof(FailureGen));
     fgen->selfpid = getpid();
     fgen->signals[0] = SIGSTOP;

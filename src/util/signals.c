@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include "headers/signals.h"
 
-sighandler_t handle_sigUSR1(int num) {
-    printf("Hi i'm handle_sigUSR1 err : %d pid %d \n",num,getpid());
-    shifter = getpid();
-    return NULL;
+
+void handle_sigUSR1(int num) {
+    printf("[LOG] Handle_sigUSR1() called >> on pid %d\n",getpid());
+    fflush(stdout);
+    signal(SIGUSR1,handle_sigUSR1);
 }
