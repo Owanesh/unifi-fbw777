@@ -10,7 +10,9 @@
 #include <time.h>
 
 void PFC__init(PFC *self, char *filename, char *name);
+
 void PFC__reset(PFC *self);
+
 void PFC__backupFPointer(PFC *self);
 
 
@@ -44,18 +46,13 @@ bool updatePosition(PFC *self, double latitude, double longitude, long timestamp
     return false;
 }
 
-bool needIShiftLeft(pid_t selfpid){
-    // TODO: implement an "alert" for FailureGenerator and SIGUSR1 signal handling
-    return false;
-}
-
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*::  Set speed and distance into PFCParameter of self pointer      :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 void PFCParameter__update(PFC *self, double speed, double distance) {
     // TODO: check if i need to shift two bits cause of SIGUSR1 signal received // speed<<2
-    self->param.speed = speed>+0?speed:0; //prevent negative speed or attack
-    self->param.distance = distance>+0?distance:0;
+    self->param.speed = speed > +0 ? speed : 0; //prevent negative speed or attack
+    self->param.distance = distance > +0 ? distance : 0;
 }
 
 /*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
@@ -68,7 +65,7 @@ void gpgll2PFCParameters(char *line, PFC *self) {
     if (updatePosition(self,
                        str2double((char *) splittedLineBuffer[1]),
                        str2double((char *) splittedLineBuffer[3]),
-                       atol((char *)splittedLineBuffer[5]))) {
+                       atol((char *) splittedLineBuffer[5]))) {
         double speed = speedBetweenPoints(self->timestamps[0],
                                           self->timestamps[1],
                                           self->param.distance);
@@ -91,11 +88,13 @@ void PFC__checkFilesize(PFC *self) {
     long size = ftell(self->fpointer);
     if (self->filesize == PFC_RESETVAL) self->filesize = size;
     if (self->filesize != size) {
-        fprintf(stderr, "[ERR] [%s] Filesize was changed in runtime\n",self->name);
+        fprintf(stderr, "[ERR] [%s] Filesize was changed in runtime\n", self->name);
         exit(EXIT_FAILURE);
     }
     fseek(self->fpointer, prev, SEEK_SET);
 }
+
+int shifter;
 
 void PFC_read(PFC *self) {
     char *line_buf = NULL;
@@ -109,12 +108,19 @@ void PFC_read(PFC *self) {
         /* Loop through until we are done with the file. */
         while (line_size >= 0) {
             line_count++;
+
+            if(shifter==self->selfpid){
+                // TODO :set shifter for next operation
+                //printf("I am %d and shifter is %d\n",getpid(),shifter);
+                shifter=SHIFTER_RESET;
+            }
             if (strContains(EMEA_GPGLL, line_buf)) {
                 PFC__backupFPointer(self);
+
                 usleep(READ_SPEED);
-                /*
-                 * printf("\ni'm %s == Line[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", self->name, line_count,
-                     line_size, line_buf_size, line_buf);*/
+
+                //printf("\ni'm %s == Line[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", self->name, line_count,
+                 //line_size, line_buf_size, line_buf);
                 PFC__checkFilesize(self);
                 gpgll2PFCParameters(line_buf, self);
             }
@@ -142,24 +148,23 @@ void PFC__init(PFC *self, char *filename, char *name) {
 }
 
 PFC *PFC__create(char *filename, char *name) {
-    signal(SIGUSR1,handle_sigUSR1);
-
     PFC *pfc = (PFC *) malloc(sizeof(PFC));
     PFC__init(pfc, filename, name);
     pfc->selfpid = getpid();
+
     return pfc;
 }
 
 void PFC__destroy(PFC *self) {
     if (self) {
-        printf("Destroying %s PFC who has pid %d \n",self->name,self->selfpid);
+        printf("Destroying %s PFC who has pid %d \n", self->name, self->selfpid);
         PFC__reset(self);
-        kill(SIGQUIT,self->selfpid);
+        kill(SIGQUIT, self->selfpid);
         free(self);
     }
 }
 
-void PFC__backupFPointer(PFC *self){
+void PFC__backupFPointer(PFC *self) {
     self->seekpoint = ftell(self->fpointer);
 }
 

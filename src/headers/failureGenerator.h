@@ -19,9 +19,7 @@ typedef struct {
     int signals[4];
 } FailureGen;
 
-static pid_t shifter;
 
-_Noreturn void setShiftFor(pid_t destinationprocess);
 void FailureGen__init(FailureGen *self,  PFC *PFC_list[3]);
 FailureGen * FailureGen__create();
 #endif

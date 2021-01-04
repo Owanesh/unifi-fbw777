@@ -1,6 +1,5 @@
 #include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
+ #include <stdlib.h>
 #include "headers/pfc.h"
 #include "headers/failureGenerator.h"
 #include "util/headers/utilities.h"
@@ -33,34 +32,39 @@ int main(int argc, char *argv[]) {
 
     if (!(PFC_pid_list[0] = fork())) {
         PFC_list[0]->selfpid = getpid();
+        signal(SIGUSR1, handle_sigUSR1);
+
         close(alpha_pipe[0]);
         write(alpha_pipe[1],PFC_list[0], sizeof(PFC *));
         close(alpha_pipe[1]);
 
-        sleep(3);
+        sleep(2);
         PFC_read(PFC_list[0]);
         PFC__destroy(PFC_list[0]);
         //exit(0);
 
     } else if (!(PFC_pid_list[1] = fork())) {
         PFC_list[1]->selfpid = getpid();
+        signal(SIGUSR1, handle_sigUSR1);
+
         close(bravo_pipe[0]);
         write(bravo_pipe[1],PFC_list[1], sizeof(PFC *));
         close(bravo_pipe[1]);
 
-        sleep(3);
+        sleep(2);
         PFC_read(PFC_list[1]);
         PFC__destroy(PFC_list[1]);
         //exit(0);
 
     } else if (!(PFC_pid_list[2] = fork())) {
-
         PFC_list[2]->selfpid = getpid();
+        signal(SIGUSR1, handle_sigUSR1);
+
         close(charlie_pipe[0]);
         write(charlie_pipe[1], PFC_list[2], sizeof(PFC *));
         close(charlie_pipe[1]);
 
-        sleep(3);
+        sleep(2);
         PFC_read(PFC_list[2]);
         PFC__destroy(PFC_list[2]);
         //exit(0);
@@ -78,7 +82,6 @@ int main(int argc, char *argv[]) {
         close(charlie_pipe[1]);
         read(charlie_pipe[0], PFC_list[2], sizeof(PFC *));
         close(charlie_pipe[0]);
-        sleep(1);
         FailureGen__init(fgen, PFC_list);
 
 

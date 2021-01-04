@@ -1,7 +1,7 @@
 #ifndef UNIFI_FBW777_CONSTANT_H
 #define UNIFI_FBW777_CONSTANT_H
 
-#define READ_SPEED 936000 //used with usleep, less than 1 sec
+#define READ_SPEED 1000000 //used with usleep, less than 1 sec
 #define EARTH_RADIUS 6365
 #define PROBABILITY_NUMBER 3
 /*:: EMEA Standard Codes   :*/
@@ -18,6 +18,7 @@
 
 #define PFC_RESETVAL -1
 #define FILESIZE_RESET -1
+#define SHIFTER_RESET 0
 
 /*:: TMP FILE PATH :*/
 #define TMPFOLDER "/tmp/"

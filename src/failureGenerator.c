@@ -1,14 +1,8 @@
 #include "util/headers/utilities.h"
 #include "util/headers/constant.h"
 #include "headers/failureGenerator.h"
+#include "headers/pfc.h"
 
-
-_Noreturn void setShiftFor(pid_t destinationprocess) {
-    pid_t backShifter = 0;
-    while (1) {
-        usleep(READ_SPEED);
-    }
-}
 
 bool isProbability(int elevation, short number) {
     return random_number(0, elevation) == number ? true : false;
@@ -40,7 +34,7 @@ void sendAndLog(int signum, pid_t destinationProcess) {
             break;
     }
     if (isSignalSendedTo(signum, probability, destinationProcess)) {
-        printf("[LOG] send signum %d to pid %d\n",signum,destinationProcess);
+        //printf("[LOG] send signum %d to pid %d\n", signum, destinationProcess);
         // TODO: logtofile each signal
     }
 }
@@ -60,6 +54,7 @@ void FailureGen__init(FailureGen *self, PFC *PFC_list[3]) {
     self->PFC_list[0] = &PFC_list[0];
     self->PFC_list[1] = &PFC_list[1];
     self->PFC_list[2] = &PFC_list[2];
+
     choosePFCandSignal(self);
 }
 
