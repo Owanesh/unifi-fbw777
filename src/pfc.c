@@ -50,7 +50,7 @@ bool updatePosition(PFC *self, double latitude, double longitude, long timestamp
 /*::  Set speed and distance into PFCParameter of self pointer      :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 void PFCParameter__update(PFC *self, double speed, double distance) {
-    // TODO: check if i need to shift two bits cause of SIGUSR1 signal received // speed<<2
+    speed = self->needShift ? ((int) speed << 2) : speed;
     self->param.speed = speed > +0 ? speed : 0; //prevent negative speed or attack
     self->param.distance = distance > +0 ? distance : 0;
 }
@@ -109,18 +109,15 @@ void PFC_read(PFC *self) {
         while (line_size >= 0) {
             line_count++;
 
-            if(shifter==self->selfpid){
-                // TODO :set shifter for next operation
-                //printf("I am %d and shifter is %d\n",getpid(),shifter);
-                shifter=SHIFTER_RESET;
+            if (shifter == self->selfpid) {
+                self->needShift = true;
+                shifter = SHIFTER_RESET;
             }
             if (strContains(EMEA_GPGLL, line_buf)) {
                 PFC__backupFPointer(self);
-
                 usleep(READ_SPEED);
-
                 //printf("\ni'm %s == Line[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", self->name, line_count,
-                 //line_size, line_buf_size, line_buf);
+                //line_size, line_buf_size, line_buf);
                 PFC__checkFilesize(self);
                 gpgll2PFCParameters(line_buf, self);
             }

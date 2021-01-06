@@ -1,10 +1,9 @@
 #include <stdio.h>
- #include <stdlib.h>
+#include <stdlib.h>
 #include "headers/pfc.h"
 #include "headers/failureGenerator.h"
 #include "util/headers/utilities.h"
 #include "util/headers/signals.h"
-#include "util/headers/constant.h"
 #include <signal.h>
 
 
@@ -19,6 +18,8 @@ int main(int argc, char *argv[]) {
     char *filename = checkFileIntoMainArgs(argc, argv);
     printf("Data location : %s\n", filename);
     pid_t PFC_pid_list[3];
+    pid_t failureGen_pid;
+    pid_t transducers_pid;
     welcomeMessage();
 
     PFC *PFC_list[3];
@@ -26,16 +27,13 @@ int main(int argc, char *argv[]) {
     PFC_list[1] = PFC__create(filename, "Bravo");
     PFC_list[2] = PFC__create(filename, "Charlie");
 
-    FailureGen *fgen = FailureGen__create();
-
-
 
     if (!(PFC_pid_list[0] = fork())) {
         PFC_list[0]->selfpid = getpid();
         signal(SIGUSR1, handle_sigUSR1);
 
         close(alpha_pipe[0]);
-        write(alpha_pipe[1],PFC_list[0], sizeof(PFC *));
+        write(alpha_pipe[1], PFC_list[0], sizeof(PFC *));
         close(alpha_pipe[1]);
 
         sleep(2);
@@ -48,7 +46,7 @@ int main(int argc, char *argv[]) {
         signal(SIGUSR1, handle_sigUSR1);
 
         close(bravo_pipe[0]);
-        write(bravo_pipe[1],PFC_list[1], sizeof(PFC *));
+        write(bravo_pipe[1], PFC_list[1], sizeof(PFC *));
         close(bravo_pipe[1]);
 
         sleep(2);
@@ -70,7 +68,8 @@ int main(int argc, char *argv[]) {
         //exit(0);
 
     } else {
-        printf("aeroplanetty.getpid() >>> %d\n",getpid());
+        printf("[log] Aeroplanetty.pid %d\n",getpid());
+
         close(alpha_pipe[1]);
         read(alpha_pipe[0], PFC_list[0], sizeof(PFC *));
         close(alpha_pipe[0]);
@@ -82,9 +81,16 @@ int main(int argc, char *argv[]) {
         close(charlie_pipe[1]);
         read(charlie_pipe[0], PFC_list[2], sizeof(PFC *));
         close(charlie_pipe[0]);
-        FailureGen__init(fgen, PFC_list);
 
+        if(!(failureGen_pid = fork())){
+            FailureGen *fgen = FailureGen__create();
+            printf("[log] FailureGenerator.pid %d\n",getpid());
+            FailureGen__init(fgen, PFC_list);
+        }
+        if(!(transducers_pid = fork())){
+            printf("[log] Transducers.pid %d\n",getpid());
 
+        }
         wait(&PFC_pid_list[0]);
         wait(&PFC_pid_list[1]);
         wait(&PFC_pid_list[2]);

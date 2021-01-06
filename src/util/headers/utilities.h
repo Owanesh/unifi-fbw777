@@ -2,12 +2,7 @@
 #define UNIFI_FBW777_UTILITIES_H
 #include <stdio.h>
 #include <stdlib.h>
-
-/*:: Definition of Boolean Type  :*/
-#define bool int
-#define true 1
-#define false 0
-
+#include <stdbool.h>
 
 /*:: Generic Math Formulae :*/
 double deg2rad(double);
@@ -18,6 +13,7 @@ bool strContains(const char * search, const char *content);
 void strSplit(char *buffer, const char *separator, char **array);
 double str2double(char *string);
 int strTokenCount(char *buffer, char token);
+int str2i(const char* str);
 
 /*:: Mathematical function :*/
 int random_number(int min_num, int max_num);

@@ -101,6 +101,22 @@ int strTokenCount(char *buffer, const char token) {
     return count;
 }
 
+int str2i(const char* str){
+    int num = 0;
+    int i = 0;
+    bool isNegetive = false;
+    if(str[i] == '-'){
+        isNegetive = true;
+        i++;
+    }
+    while (str[i] && (str[i] >= '0' && str[i] <= '9')){
+        num = num * 10 + (str[i] - '0');
+        i++;
+    }
+    if(isNegetive) num = -1 * num;
+    return num;
+}
+
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*::  Split a string divided by separator. this fill an array :*/
 /*::      buffer: string that will be splitted                :*/

@@ -13,9 +13,9 @@
 #include "pfc.h"
 
 typedef struct {
+    FILE *log_file;
     pid_t selfpid;
     PFC **PFC_list[3];
-    bool needsShift[3];
     int signals[4];
 } FailureGen;
 

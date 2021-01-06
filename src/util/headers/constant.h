@@ -21,7 +21,7 @@
 #define SHIFTER_RESET 0
 
 /*:: TMP FILE PATH :*/
-#define TMPFOLDER "/tmp/"
+#define TMPFOLDER ".tmp/"
 #define FAILUREGEN_LOGFILE "failures.log"
 #define WES_LOGFILE "status.log"
 #define PFCLS_LOGFILE "switch.log"

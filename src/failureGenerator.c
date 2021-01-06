@@ -2,6 +2,9 @@
 #include "util/headers/constant.h"
 #include "headers/failureGenerator.h"
 #include "headers/pfc.h"
+#include <sys/stat.h>
+#include <string.h>
+#include <errno.h>
 
 
 bool isProbability(int elevation, short number) {
@@ -10,14 +13,24 @@ bool isProbability(int elevation, short number) {
 
 bool isSignalSendedTo(int signum, int probability, pid_t destinationProcess) {
     if (isProbability((int) probability, PROBABILITY_NUMBER)) {
-        // TODO: check if process is alive or blocked.
         kill(destinationProcess, signum);
         return true;
     }
     return false;
 }
 
-void sendAndLog(int signum, pid_t destinationProcess) {
+void logEvent(FailureGen *self, PFC *pfc, int signum) {
+    if (fileExists(FAILUREGEN_LOGFILE)) {
+        self->log_file = fopen(FAILUREGEN_LOGFILE, "a");
+    } else {
+        self->log_file = fopen(FAILUREGEN_LOGFILE, "w");
+    }
+    fprintf(self->log_file, "%d\t%s\t%d\n", pfc->selfpid, pfc->name, signum);
+    fclose(self->log_file);
+}
+
+
+void sendAndLog(FailureGen *self, int signum, PFC *destinationProcess) {
     int probability = 0;
     switch (signum) {
         case SIGSTOP:
@@ -33,9 +46,9 @@ void sendAndLog(int signum, pid_t destinationProcess) {
             probability = (int) 1e1;
             break;
     }
-    if (isSignalSendedTo(signum, probability, destinationProcess)) {
+    if (isSignalSendedTo(signum, probability, destinationProcess->selfpid)) {
         //printf("[LOG] send signum %d to pid %d\n", signum, destinationProcess);
-        // TODO: logtofile each signal
+        logEvent(self, destinationProcess, signum);
     }
 }
 
@@ -45,16 +58,27 @@ _Noreturn void choosePFCandSignal(FailureGen *self) {
         int pickIndex = 0;
         for (int india = 0; india < 4; india++) {
             pickIndex = random_number(0, 2);
-            sendAndLog(self->signals[india], (*self->PFC_list[pickIndex])->selfpid);
+            sendAndLog(self, self->signals[india], (*self->PFC_list[pickIndex]));
         }
     }
+}
+
+void initializeFileLog(FailureGen *self) {
+    if (fileExists(FAILUREGEN_LOGFILE)) {
+        self->log_file = fopen(FAILUREGEN_LOGFILE, "a");
+    } else {
+        self->log_file = fopen(FAILUREGEN_LOGFILE, "w");
+    }
+    fprintf(self->log_file, "------------------------\n");
+    fprintf(self->log_file, "Process\tName\tSignal\n");
+    fclose(self->log_file);
 }
 
 void FailureGen__init(FailureGen *self, PFC *PFC_list[3]) {
     self->PFC_list[0] = &PFC_list[0];
     self->PFC_list[1] = &PFC_list[1];
     self->PFC_list[2] = &PFC_list[2];
-
+    initializeFileLog(self);
     choosePFCandSignal(self);
 }
 
@@ -68,3 +92,5 @@ FailureGen *FailureGen__create() {
     fgen->signals[3] = SIGUSR1;
     return fgen;
 }
+
+
