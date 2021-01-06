@@ -2,14 +2,85 @@
 #include "util/headers/constant.h"
 #include "headers/failureGenerator.h"
 #include "headers/pfc.h"
-#include <sys/stat.h>
-#include <string.h>
-#include <errno.h>
 
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  Calculate a random number between zero and maxlimit         :*/
+/*::  after that check if the calculated number is equal to alpha :*/
+/*::    maxlimit : max limit, should expect 10^n                  :*/
+/*::    alpha : comparison number                                 :*/
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+bool isProbability(int maxlimit, short alpha);
 
-bool isProbability(int elevation, short number) {
-    return random_number(0, elevation) == number ? true : false;
+bool isSignalSendedTo(int signum, int probability, pid_t destinationProcess);
+
+/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  Log a signal number into self.log_file             :*/
+/*::    self : referece to self "object" in memory       :*/
+/*::    pfc : referece to PFC who has received signal    :*/
+/*::    signum : integer number, it's the signal number  :*/
+/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+void logEvent(FailureGen *self, PFC *pfc, int signum);
+
+/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  Initialize log files                                     :*/
+/*::  Create file if doesn't exist or open it in "append" mode :*/
+/*::  Also create an header                                    :*/
+/*::    self : referece to self "object" in memory             :*/
+/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+void failuregenerator_initfileLog(FailureGen *self);
+
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  Provides correct probability for every signal number      :*/
+/*::  This function wraps all signal workflow                   :*/
+/*::    self : referece to self "object" in memory              :*/
+/*::    signum : int number, a signal number                    :*/
+/*::    destinationProcess : referece to PFC "object" in memory :*/
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+void sendAndLog(FailureGen *self, int signum, PFC *destinationProcess);
+
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  This function pick a random signal from self references :*/
+/*::  and sends one for each PFC refereces                    :*/
+/*::    self : referece to self "object" in memory            :*/
+/*::  (works once per second)                                 :*/
+/*::  (this function _Noreturn anything)                      :*/
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+_Noreturn void choosePFCandSignal(FailureGen *self) {
+    while (1) {
+        sleep(1);
+        int pickIndex = 0;
+        for (int india = 0; india < 4; india++) {
+            pickIndex = random_number(0, 2);
+            sendAndLog(self, self->signals[india], (*self->PFC_list[pickIndex]));
+        }
+    }
 }
+
+
+void FailureGen__init(FailureGen *self, PFC *PFC_list[3]) {
+    self->PFC_list[0] = &PFC_list[0];
+    self->PFC_list[1] = &PFC_list[1];
+    self->PFC_list[2] = &PFC_list[2];
+    failuregenerator_initfileLog(self);
+    choosePFCandSignal(self);
+}
+
+
+FailureGen *FailureGen__create() {
+    FailureGen *fgen = (FailureGen *) malloc(sizeof(FailureGen));
+    fgen->selfpid = getpid();
+    fgen->signals[0] = SIGSTOP;
+    fgen->signals[1] = SIGINT;
+    fgen->signals[2] = SIGCONT;
+    fgen->signals[3] = SIGUSR1;
+    return fgen;
+}
+
+
+bool isProbability(int maxlimit, short alpha) {
+    return random_number(0, maxlimit) == alpha ? true : false;
+}
+
 
 bool isSignalSendedTo(int signum, int probability, pid_t destinationProcess) {
     if (isProbability((int) probability, PROBABILITY_NUMBER)) {
@@ -29,41 +100,7 @@ void logEvent(FailureGen *self, PFC *pfc, int signum) {
     fclose(self->log_file);
 }
 
-
-void sendAndLog(FailureGen *self, int signum, PFC *destinationProcess) {
-    int probability = 0;
-    switch (signum) {
-        case SIGSTOP:
-            probability = (int) 1e2;
-            break;
-        case SIGINT:
-            probability = (int) 1e4;
-            break;
-        case SIGCONT:
-            probability = (int) 1e1;
-            break;
-        case SIGUSR1:
-            probability = (int) 1e1;
-            break;
-    }
-    if (isSignalSendedTo(signum, probability, destinationProcess->selfpid)) {
-        //printf("[LOG] send signum %d to pid %d\n", signum, destinationProcess);
-        logEvent(self, destinationProcess, signum);
-    }
-}
-
-_Noreturn void choosePFCandSignal(FailureGen *self) {
-    while (1) {
-        sleep(1);
-        int pickIndex = 0;
-        for (int india = 0; india < 4; india++) {
-            pickIndex = random_number(0, 2);
-            sendAndLog(self, self->signals[india], (*self->PFC_list[pickIndex]));
-        }
-    }
-}
-
-void initializeFileLog(FailureGen *self) {
+void failuregenerator_initfileLog(FailureGen *self) {
     if (fileExists(FAILUREGEN_LOGFILE)) {
         self->log_file = fopen(FAILUREGEN_LOGFILE, "a");
     } else {
@@ -74,23 +111,23 @@ void initializeFileLog(FailureGen *self) {
     fclose(self->log_file);
 }
 
-void FailureGen__init(FailureGen *self, PFC *PFC_list[3]) {
-    self->PFC_list[0] = &PFC_list[0];
-    self->PFC_list[1] = &PFC_list[1];
-    self->PFC_list[2] = &PFC_list[2];
-    initializeFileLog(self);
-    choosePFCandSignal(self);
+void sendAndLog(FailureGen *self, int signum, PFC *destinationProcess) {
+    int probability = 0;
+    switch (signum) {
+        case SIGSTOP:
+            probability = (int) SIGSTOP_PROBABILITY;
+            break;
+        case SIGINT:
+            probability = (int) SIGINT_PROBABILITY;
+            break;
+        case SIGCONT:
+            probability = (int) SIGCONT_PROBABILITY;
+            break;
+        case SIGUSR1:
+            probability = (int) SIGUSR1_PROBABILITY;
+            break;
+    }
+    if (isSignalSendedTo(signum, probability, destinationProcess->selfpid)) {
+        logEvent(self, destinationProcess, signum);
+    }
 }
-
-
-FailureGen *FailureGen__create() {
-    FailureGen *fgen = (FailureGen *) malloc(sizeof(FailureGen));
-    fgen->selfpid = getpid();
-    fgen->signals[0] = SIGSTOP;
-    fgen->signals[1] = SIGINT;
-    fgen->signals[2] = SIGCONT;
-    fgen->signals[3] = SIGUSR1;
-    return fgen;
-}
-
-
