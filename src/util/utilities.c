@@ -1,10 +1,16 @@
 #include <math.h>
-#include "headers/utilities.h"
-#include "headers/constant.h"
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+/*:: IPC :*/
+#include <sys/socket.h>
+#include <sys/un.h> /* For AF_UNIX sockets */
+
+/*:: Custom resources:*/
+#include "headers/utilities.h"
+#include "headers/constant.h"
 
 #define pi 3.14159265358979323846
 
@@ -36,7 +42,7 @@ double deg2rad(double deg) {
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*::  This function converts radians to decimal degrees             :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-double rad2deg(double rad) {
+__unused double rad2deg(double rad) {
     return (rad * 180 / pi);
 }
 
@@ -63,9 +69,9 @@ double speedBetweenPoints(int timestamp1, int timestamp2, double distance) {
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*::  Check if a file exist                                         :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-bool fileExists(const char *fname) {
+bool fileExists(const char *filename) {
     FILE *file;
-    if ((file = fopen(fname, "r"))) {
+    if ((file = fopen(filename, "r"))) {
         fclose(file);
         return true;
     }
@@ -89,7 +95,7 @@ bool strContains(const char *search, const char *content) {
 /*::      token: character to looking for                           :*/
 /*::      buffer: string who maybe contains "token" char            :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-int strTokenCount(char *buffer, const char token) {
+int strTokenCount(const char *buffer, const char token) {
     int count = 0;
     size_t i = 0;
     while (buffer[i] != '\0') {
@@ -101,19 +107,19 @@ int strTokenCount(char *buffer, const char token) {
     return count;
 }
 
-int str2i(const char* str){
+__unused int str2i(const char* str){
     int num = 0;
     int i = 0;
-    bool isNegetive = false;
+    bool isNegative = false;
     if(str[i] == '-'){
-        isNegetive = true;
+        isNegative = true;
         i++;
     }
     while (str[i] && (str[i] >= '0' && str[i] <= '9')){
         num = num * 10 + (str[i] - '0');
         i++;
     }
-    if(isNegetive) num = -1 * num;
+    if(isNegative) num = -1 * num;
     return num;
 }
 
@@ -141,7 +147,7 @@ void strSplit(char *buffer, const char *separator, char **array) {
 /*::      returns : min < (number) < max                  :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 int random_number(int min_num, int max_num) {
-    int result = 0, low_num = 0, hi_num = 0;
+    int result, low_num, hi_num;
     if (min_num < max_num) {
         low_num = min_num;
         hi_num = max_num + 1;
@@ -206,3 +212,25 @@ int getIndexOfPFCList(pid_t PFC_pid, pid_t *PFC_list, int position) {
     else
         return getIndexOfPFCList(PFC_pid, PFC_list, ++position);
 }
+
+
+
+
+__unused int make_named_socket(const char *filename) {
+    unlink(filename);
+    struct sockaddr_un sockfile;
+    int sock;
+    sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sock < 0) {
+        perror("[ERR] Socket error: ");
+        exit(EXIT_FAILURE);
+    }
+    sockfile.sun_family = AF_UNIX;
+    strcpy (sockfile.sun_path, filename);
+    if (bind(sock, (struct sockaddr *) &sockfile, sizeof(sockfile)) < 0) {
+        perror("[ERR] Bind error : ");
+        exit(EXIT_FAILURE);
+    }
+    return sock;
+}
+

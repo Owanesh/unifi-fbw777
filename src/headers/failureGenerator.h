@@ -20,7 +20,7 @@
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*::  FailureGen struct                                 :*/
 /*::    log_file : referece to FILE, used for logging   :*/
-/*::    selfpid : a copy of pid of process who allocate :*/
+/*::    selfPid : a copy of pid of process who allocate :*/
 /*::                memory for this struct              :*/
 /*::    PFC_list : references to three PFC, useful to   :*/
 /*::                implement an easier workflow.       :*/

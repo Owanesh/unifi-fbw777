@@ -25,7 +25,9 @@
 #define FAILUREGEN_LOGFILE "failures.log"
 #define WES_LOGFILE "status.log"
 #define PFCLS_LOGFILE "switch.log"
-
+#define TRANSDUCERS_LOGFILE1 "speedPFC1.log"
+#define TRANSDUCERS_LOGFILE2 "speedPFC2.log"
+#define TRANSDUCERS_LOGFILE3 "speedPFC3.log"
 
 
 #endif //UNIFI_FBW777_CONSTANT_H

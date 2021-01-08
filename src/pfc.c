@@ -1,13 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "headers/pfc.h"
-#include "util/headers/utilities.h"
-#include "util/headers/constant.h"
-#include "util/headers/signals.h"
-#include <signal.h>
-#include <unistd.h>
-#include <time.h>
+/*:: IPC :*/
+#include <sys/socket.h>
+#include <sys/un.h> /* For AF_UNIX sockets */
+
+int shifter;
+
+// TODO : {DOCS} write some documentation for each function below
 
 void PFC__init(PFC *self, char *filename, char *name);
 
@@ -17,7 +15,7 @@ void PFC__backupFPointer(PFC *self);
 
 
 /* :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*:: UpdatePosition allows to update arrays referred to PFC's GPGLL */
+/*:: UpdatePosition allows to update arrays referred to PFCs GPGLL */
 /*::     PFC *self : Reference to PFC object                        */
 /*::     Other parameters according to GPGLL:                       */
 /*::        double latitude, longitude                              */
@@ -83,53 +81,47 @@ void gpgll2PFCParameters(char *line, PFC *self) {
 /*::  exit(EXIT_FAILURE);                                            :*/
 /*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 void PFC__checkFilesize(PFC *self) {
-    long prev = ftell(self->fpointer);
-    fseek(self->fpointer, 0, SEEK_END); // seek to end of file
-    long size = ftell(self->fpointer);
+    long prev = ftell(self->filePointer);
+    fseek(self->filePointer, 0, SEEK_END); // seek to end of file
+    long size = ftell(self->filePointer);
     if (self->filesize == PFC_RESETVAL) self->filesize = size;
     if (self->filesize != size) {
         fprintf(stderr, "[ERR] [%s] Filesize was changed in runtime\n", self->name);
         exit(EXIT_FAILURE);
     }
-    fseek(self->fpointer, prev, SEEK_SET);
+    fseek(self->filePointer, prev, SEEK_SET);
 }
 
-int shifter;
 
 void PFC_read(PFC *self) {
     char *line_buf = NULL;
     size_t line_buf_size = 0;
     int line_count = 0;
     ssize_t line_size = 0;
-    self->fpointer = fopen(self->filename, "r");
+    self->filePointer = fopen(self->filename, "r");
     /* Get the first line of the file. */
     while (line_size >= 0) {
-        line_size = getline(&line_buf, &line_buf_size, self->fpointer);
+        line_size = getline(&line_buf, &line_buf_size, self->filePointer);
         /* Loop through until we are done with the file. */
         while (line_size >= 0) {
             line_count++;
-
-            if (shifter == self->selfpid) {
+            if (shifter == self->selfPid) {
                 self->needShift = true;
                 shifter = SHIFTER_RESET;
             }
             if (strContains(EMEA_GPGLL, line_buf)) {
-                PFC__backupFPointer(self);
                 usleep(READ_SPEED);
-                //printf("\ni'm %s == Line[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", self->name, line_count,
-                //line_size, line_buf_size, line_buf);
+                PFC__backupFPointer(self);
                 PFC__checkFilesize(self);
                 gpgll2PFCParameters(line_buf, self);
             }
-            /*printf("\n\t I'm %s == Line[%06d]: chars=%06zd, buf size=%06zu, contents: %s ", self->name, line_count,
-                line_size, line_buf_size, line_buf);*/
-            line_size = getline(&line_buf, &line_buf_size, self->fpointer);
+            line_size = getline(&line_buf, &line_buf_size, self->filePointer);
         }
     }
 
     free(line_buf); // Free the allocated line buffer
     line_buf = NULL;
-    fclose(self->fpointer); // Close the file now that we are done with it
+    fclose(self->filePointer); // Close the file now that we are done with it
 }
 
 void PFC__init(PFC *self, char *filename, char *name) {
@@ -141,37 +133,41 @@ void PFC__init(PFC *self, char *filename, char *name) {
         self->filename = filename;
         self->filesize = FILESIZE_RESET;
     }
-    // redefines handler for these signals
 }
 
 PFC *PFC__create(char *filename, char *name) {
     PFC *pfc = (PFC *) malloc(sizeof(PFC));
     PFC__init(pfc, filename, name);
-    pfc->selfpid = getpid();
-
+    pfc->selfPid = getpid();
     return pfc;
 }
 
 void PFC__destroy(PFC *self) {
     if (self) {
-        printf("Destroying %s PFC who has pid %d \n", self->name, self->selfpid);
+        printf("Destroying %s PFC who has pid %d \n", self->name, self->selfPid);
         PFC__reset(self);
-        kill(SIGQUIT, self->selfpid);
+        kill(SIGQUIT, self->selfPid);
         free(self);
     }
 }
 
+
 void PFC__backupFPointer(PFC *self) {
-    self->seekpoint = ftell(self->fpointer);
+    self->seekPoint = ftell(self->filePointer);
+    if (self->com.type == SOCKCH) {
+        PFC_log(self);
+    }
 }
 
 
 void PFC__reset(PFC *self) {
-    if (self->fpointer != NULL) {
-        fclose(self->fpointer);
+    self->com.type = -1;
+
+    if (self->filePointer != NULL) {
+        fclose(self->filePointer);
         self->filesize = FILESIZE_RESET;
         self->filename = "";
-        self->seekpoint = FILESIZE_RESET;
+        self->seekPoint = FILESIZE_RESET;
     }
     self->latitudes[0] = PFC_RESETVAL;
     self->latitudes[1] = PFC_RESETVAL;
@@ -179,4 +175,17 @@ void PFC__reset(PFC *self) {
     self->longitudes[1] = PFC_RESETVAL;
     self->timestamps[0] = PFC_RESETVAL;
     self->timestamps[1] = PFC_RESETVAL;
+}
+
+
+void PFC_log(PFC *self) {
+   //printf("[%s}.speed : %f\n",self->name, self->param.speed);
+    if (write(self->com.channel, (&self->param.speed), sizeof(double)) < 0)
+        perror("writing stream message");
+    fflush(stdout);
+}
+
+void PFC__setComunicationChannel(PFC *self, int channel, int channelType) {
+    self->com.channel = channel;
+    self->com.type = channelType;
 }
