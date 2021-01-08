@@ -6,7 +6,7 @@
 
 /*: Custom types :*/
 typedef struct{
-    int me[2];   // 0 = read, 1 = write
+    int pipe[2];   // 0 = read, 1 = write
 }Pipe;
 
 typedef struct {

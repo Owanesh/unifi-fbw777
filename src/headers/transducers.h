@@ -7,7 +7,7 @@
 typedef struct {
     PFC **PFC_list[3];
     FILE *log_files[3];
-    Channel pfcChannels[3];
+    Channel comunicationChannel;
 } Transducer;
 
 Transducer *Transducer__create();

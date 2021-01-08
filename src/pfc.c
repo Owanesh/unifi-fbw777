@@ -13,7 +13,6 @@ void PFC__reset(PFC *self);
 
 void PFC__backupFPointer(PFC *self);
 
-
 /* :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*:: UpdatePosition allows to update arrays referred to PFCs GPGLL */
 /*::     PFC *self : Reference to PFC object                        */
@@ -154,7 +153,7 @@ void PFC__destroy(PFC *self) {
 
 void PFC__backupFPointer(PFC *self) {
     self->seekPoint = ftell(self->filePointer);
-    if (self->com.type == SOCKCH) {
+    if (self->com.type == SOCKCH || self->com.type == PIPECH ) {
         PFC_log(self);
     }
 }
@@ -179,10 +178,14 @@ void PFC__reset(PFC *self) {
 
 
 void PFC_log(PFC *self) {
-   //printf("[%s}.speed : %f\n",self->name, self->param.speed);
-    if (write(self->com.channel, (&self->param.speed), sizeof(double)) < 0)
-        perror("writing stream message");
-    fflush(stdout);
+    if (self->com.type==SOCKCH || self->com.type==PIPECH) {
+        //printf("[%s}.speed : %f\n",self->name, self->param.speed);
+        if (write(self->com.channel, (&self->param.speed), sizeof(double)) < 0) {
+            perror("[ERR] PFC can't log information");
+            exit(0);
+        }
+        fflush(stdout);
+    }
 }
 
 void PFC__setComunicationChannel(PFC *self, int channel, int channelType) {

@@ -23,28 +23,39 @@ void Transducer__init(Transducer *self, PFC *PFC_list[3]) {
 }
 
 
-void connectAndReadFromSocket(Transducer *self, int sockFile) {
+void transducer__readFromChannel(Transducer *self, int channel,int channelType, char *fileName, int indexLogfile, int indexPFC) {
     sleep(2); //sync
-    double res;
+    static double res;
     do {
-        read(sockFile, &res, sizeof(double));
-        if (res < 0) {
-            perror("[ERR] Transducer.connectAndReadFromSocket ");
-        } else {
-            transducer__speedLog(self->log_files[0],
-                                 TRANSDUCERS_LOGFILE1,
-                                 (*self->PFC_list[0])->selfPid,
-                                 (*self->PFC_list[0])->name,
-                                 res);
-        }
+        if (channelType==SOCKCH || channelType==PIPECH) {
+            read(channel, &res, sizeof(double));
+            if (res < 0) {
+                perror("[ERR] Transducer.connectAndReadFromSocket ");
+            } else {
+                //printf("[%d]\treads\t[%f]\t[%d] \n",getpid(),res,channelType);
+                transducer__speedLog(self->log_files[indexLogfile],
+                                     fileName,
+                                     (*self->PFC_list[indexPFC])->selfPid,
+                                     (*self->PFC_list[indexPFC])->name,
+                                     res);
+            }
+        }// else read from file
     } while (res >= 0);
 }
 
+
 void transducer__readFromSocket(Transducer *self) {
-    connectAndReadFromSocket(self, self->pfcChannels[0].channel);
-    close(self->pfcChannels[0].channel);
+    transducer__readFromChannel(self, self->comunicationChannel.channel,SOCKCH,
+                                TRANSDUCERS_LOGFILE1,
+                                0, 0);
+
 }
 
+void transducer__readFromPipe(Transducer *self) {
+    transducer__readFromChannel(self, self->comunicationChannel.channel,PIPECH,
+                                TRANSDUCERS_LOGFILE2,
+                                1, 1);
+}
 
 Transducer *Transducer__create() {
     Transducer *transducer = (Transducer *) malloc(sizeof(Transducer));
@@ -63,10 +74,13 @@ void transducer__initFileLog(FILE *filePointer, const char *fileName) {
 }
 
 void Transducer__setComunicationChannel(Transducer *self, int channel, int channelType) {
-    self->pfcChannels[0].channel = channel;
-    self->pfcChannels[0].type = channelType;
+    self->comunicationChannel.channel = channel;
+    self->comunicationChannel.type = channelType;
     if (channelType == SOCKCH) {
         transducer__readFromSocket(self);
+    }
+    if (channelType == PIPECH) {
+        transducer__readFromPipe(self);
     }
 }
 
