@@ -85,7 +85,7 @@ void PFC__checkFilesize(PFC *self) {
     long size = ftell(self->filePointer);
     if (self->filesize == PFC_RESETVAL) self->filesize = size;
     if (self->filesize != size) {
-        fprintf(stderr, "[ERR] [%s] Filesize was changed in runtime\n", self->name);
+        fprintf(stderr, "[ERR][PFC][%s]\tFilesize was changed in runtime\n", self->name);
         exit(EXIT_FAILURE);
     }
     fseek(self->filePointer, prev, SEEK_SET);
@@ -127,7 +127,7 @@ void PFC__init(PFC *self, char *filename, char *name) {
     self->name = name;
     PFC__reset(self);
     if (!fileExists(filename)) {
-        fprintf(stderr, "[ERR] Error during file opening '%s'\n", filename);
+        fprintf(stderr, "[ERR][PFC]\tError during file opening '%s'\n", filename);
     } else {
         self->filename = filename;
         self->filesize = FILESIZE_RESET;
@@ -153,9 +153,7 @@ void PFC__destroy(PFC *self) {
 
 void PFC__backupFPointer(PFC *self) {
     self->seekPoint = ftell(self->filePointer);
-    if (self->com.type == SOCKCH || self->com.type == PIPECH ) {
-        PFC_log(self);
-    }
+    PFC_log(self);
 }
 
 
@@ -178,17 +176,43 @@ void PFC__reset(PFC *self) {
 
 
 void PFC_log(PFC *self) {
-    if (self->com.type==SOCKCH || self->com.type==PIPECH) {
+    if (self->com.type == SOCKCH || self->com.type == PIPECH) {
         //printf("[%s}.speed : %f\n",self->name, self->param.speed);
         if (write(self->com.channel, (&self->param.speed), sizeof(double)) < 0) {
-            perror("[ERR] PFC can't log information");
+            perror("[ERR][PFC]\tCan't log information");
             exit(0);
         }
         fflush(stdout);
     }
+    if (self->com.type == FILECH) {
+        struct flock lock;
+        lock.l_type = F_WRLCK;    /* read/write (exclusive versus shared) lock */
+        lock.l_whence = SEEK_SET; /* base for seek offsets */
+        lock.l_start = 0;         /* 1st byte in file */
+        lock.l_len = 0;           /* 0 here means 'until EOF' */
+        lock.l_pid = self->selfPid;    /* process id */
+
+
+        if (fcntl(self->com.channel, F_SETLK, &lock) < 0) {
+            perror("[ERR][PFC]\tFailed to get lock");
+            exit(0);
+        } else {
+            if (write(self->com.channel, (&self->param.speed), sizeof(double)) < 0) {
+                perror("[ERR]{PFC]\tCan't log information");
+                exit(0);
+            } else {
+                lock.l_type = F_UNLCK;
+                if (fcntl(self->com.channel, F_SETLK, &lock) < 0)
+                    perror("[ERR][PFC]\tExplicit unlocking failed");
+            }
+        }
+    }
+
+
 }
 
 void PFC__setComunicationChannel(PFC *self, int channel, int channelType) {
     self->com.channel = channel;
     self->com.type = channelType;
 }
+

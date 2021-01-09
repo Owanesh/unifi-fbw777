@@ -3,7 +3,7 @@
 
 #include "pfc.h"
 #include <stdlib.h>
-
+#include <fcntl.h>
 typedef struct {
     PFC **PFC_list[3];
     FILE *log_files[3];

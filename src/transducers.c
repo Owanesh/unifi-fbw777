@@ -23,14 +23,16 @@ void Transducer__init(Transducer *self, PFC *PFC_list[3]) {
 }
 
 
-void transducer__readFromChannel(Transducer *self, int channel,int channelType, char *fileName, int indexLogfile, int indexPFC) {
+void transducer__readFromChannel(Transducer *self, int channel, int channelType, char *fileName, int indexLogfile,
+                                 int indexPFC) {
     sleep(2); //sync
     static double res;
     do {
-        if (channelType==SOCKCH || channelType==PIPECH) {
+        if (channelType == SOCKCH || channelType == PIPECH) {
             read(channel, &res, sizeof(double));
             if (res < 0) {
-                perror("[ERR] Transducer.connectAndReadFromSocket ");
+                fprintf(stderr, "[ERR][Transducer]\tError while reading data'%s'\n",
+                        Channel__extendedName(channelType));
             } else {
                 //printf("[%d]\treads\t[%f]\t[%d] \n",getpid(),res,channelType);
                 transducer__speedLog(self->log_files[indexLogfile],
@@ -45,16 +47,47 @@ void transducer__readFromChannel(Transducer *self, int channel,int channelType, 
 
 
 void transducer__readFromSocket(Transducer *self) {
-    transducer__readFromChannel(self, self->comunicationChannel.channel,SOCKCH,
+    transducer__readFromChannel(self, self->comunicationChannel.channel, SOCKCH,
                                 TRANSDUCERS_LOGFILE1,
                                 0, 0);
 
 }
 
 void transducer__readFromPipe(Transducer *self) {
-    transducer__readFromChannel(self, self->comunicationChannel.channel,PIPECH,
+    transducer__readFromChannel(self, self->comunicationChannel.channel, PIPECH,
                                 TRANSDUCERS_LOGFILE2,
                                 1, 1);
+}
+
+void transducer__readFromFile(Transducer *self) {
+    struct flock lock;
+    lock.l_type = F_WRLCK;    /* read/write (exclusive) lock */
+    lock.l_whence = SEEK_SET; /* base for seek offsets */
+    lock.l_start = 0;         /* 1st byte in file */
+    lock.l_len = 0;           /* 0 here means 'until EOF' */
+    lock.l_pid = getpid();    /* process id */
+    sleep(2); //sync
+    static double res;
+    do {
+        sleep(1);
+        fcntl(self->comunicationChannel.channel, F_GETLK, &lock); /* sets lock.l_type to F_UNLCK if no write lock */
+        if (lock.l_type != F_UNLCK)
+            perror("[ERR][Transducer]\tFile is still write locked ");
+        lock.l_type = F_RDLCK; /* prevents any writing during the reading */
+        if (fcntl(self->comunicationChannel.channel, F_SETLK, &lock) < 0)
+            perror("[ERR][Transducer]\tCan't get a read-only lock ");
+        /* Read the bytes (they happen to be ASCII codes) one at a time. */
+        while (read(self->comunicationChannel.channel, &res, sizeof(double)) > 0) { /* 0 signals EOF */
+            transducer__speedLog(self->log_files[2],
+                                 TRANSDUCERS_LOGFILE3,
+                                 (*self->PFC_list[2])->selfPid,
+                                 (*self->PFC_list[2])->name,
+                                 res);
+        }
+        lock.l_type = F_UNLCK;
+        if (fcntl(self->comunicationChannel.channel, F_SETLK, &lock) < 0)
+            perror("[ERR][Transducer]\tExplicit unlocking failed ");
+    } while (res >= 0);
 }
 
 Transducer *Transducer__create() {
@@ -82,6 +115,9 @@ void Transducer__setComunicationChannel(Transducer *self, int channel, int chann
     if (channelType == PIPECH) {
         transducer__readFromPipe(self);
     }
+    if (channelType == FILECH) {
+        transducer__readFromFile(self);
+    }
 }
 
 void transducer__speedLog(FILE *filePointer, char *fileName, int PFCPid, char *PFCName, double PFCSpeed) {
@@ -93,3 +129,5 @@ void transducer__speedLog(FILE *filePointer, char *fileName, int PFCPid, char *P
     fprintf(filePointer, "%d\t%s\t%f\n", PFCPid, PFCName, PFCSpeed);
     fclose(filePointer);
 }
+
+

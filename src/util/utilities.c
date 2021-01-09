@@ -107,19 +107,19 @@ int strTokenCount(const char *buffer, const char token) {
     return count;
 }
 
-__unused int str2i(const char* str){
+__unused int str2i(const char *str) {
     int num = 0;
     int i = 0;
     bool isNegative = false;
-    if(str[i] == '-'){
+    if (str[i] == '-') {
         isNegative = true;
         i++;
     }
-    while (str[i] && (str[i] >= '0' && str[i] <= '9')){
+    while (str[i] && (str[i] >= '0' && str[i] <= '9')) {
         num = num * 10 + (str[i] - '0');
         i++;
     }
-    if(isNegative) num = -1 * num;
+    if (isNegative) num = -1 * num;
     return num;
 }
 
@@ -214,8 +214,6 @@ int getIndexOfPFCList(pid_t PFC_pid, pid_t *PFC_list, int position) {
 }
 
 
-
-
 __unused int make_named_socket(const char *filename) {
     unlink(filename);
     struct sockaddr_un sockfile;
@@ -234,3 +232,15 @@ __unused int make_named_socket(const char *filename) {
     return sock;
 }
 
+char *Channel__extendedName(int channelType) {
+    switch (channelType) {
+        default:
+            return "Undefined";
+        case SOCKCH:
+            return "Socket";
+        case PIPECH:
+            return "Pipe";
+        case FILECH:
+            return "File";
+    }
+}

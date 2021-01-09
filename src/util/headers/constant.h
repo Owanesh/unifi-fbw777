@@ -25,6 +25,7 @@
 #define FAILUREGEN_LOGFILE "failures.log"
 #define WES_LOGFILE "status.log"
 #define PFCLS_LOGFILE "switch.log"
+#define TRANPFC_FILE "third_transpfc.aeroplanetty"
 #define TRANSDUCERS_LOGFILE1 "speedPFC1.log"
 #define TRANSDUCERS_LOGFILE2 "speedPFC2.log"
 #define TRANSDUCERS_LOGFILE3 "speedPFC3.log"

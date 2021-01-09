@@ -7,6 +7,8 @@
 #include "util/headers/signals.h"
 #include <signal.h>
 #include <sys/socket.h>
+#include <fcntl.h>
+
 int main(int argc, char *argv[]) {
     Pipe pfcs[3];
     pipe(pfcs[0].pipe);
@@ -41,7 +43,7 @@ int main(int argc, char *argv[]) {
         signal(SIGUSR1, handle_sigUSR1);
 
         close(sock_trans_pfc[0]);
-        PFC__setComunicationChannel(PFC_list[0],sock_trans_pfc[1], SOCKCH);
+        PFC__setComunicationChannel(PFC_list[0], sock_trans_pfc[1], SOCKCH);
 
         close(pfcs[0].pipe[0]);
         write(pfcs[0].pipe[1], PFC_list[0], sizeof(PFC *));
@@ -53,7 +55,7 @@ int main(int argc, char *argv[]) {
 
 
         close(sock_trans_pfc[1]);
-        //exit(0);
+        exit(0);
 
     } else if (!(PFC_pid_list[1] = fork())) {
         PFC_list[1]->selfPid = getpid();
@@ -72,20 +74,33 @@ int main(int argc, char *argv[]) {
 
         close(trans_pfc.pipe[1]);
 
-        //exit(0);
+        exit(0);
 
     } else if (!(PFC_pid_list[2] = fork())) {
         PFC_list[2]->selfPid = getpid();
         signal(SIGUSR1, handle_sigUSR1);
 
-        close(pfcs[2].pipe[0]);
-        write(pfcs[2].pipe[1], PFC_list[2], sizeof(PFC *));
-        close(pfcs[2].pipe[1]);
+        int fileDescriptor;
+        if ((fileDescriptor = open(TRANPFC_FILE, O_RDWR | O_CREAT, 0666)) < 0)  /* -1 signals an error */
+        {
+            perror("open failed...");
+            exit(0);
+        } else {
+            PFC__setComunicationChannel(PFC_list[2], fileDescriptor, FILECH);
 
-        sleep(2);
-        PFC_read(PFC_list[2]);
-        PFC__destroy(PFC_list[2]);
-        //exit(0);
+
+            close(pfcs[2].pipe[0]);
+            write(pfcs[2].pipe[1], PFC_list[2], sizeof(PFC *));
+            close(pfcs[2].pipe[1]);
+            sleep(2);
+            PFC_read(PFC_list[2]);
+            PFC__destroy(PFC_list[2]);
+
+
+            close(fileDescriptor);
+        }
+
+        exit(0);
 
     } else {
         printf("[log] Aeroplanetty.pid %d\n", getpid());
@@ -112,12 +127,24 @@ int main(int argc, char *argv[]) {
             Transducer__init(transducer, PFC_list);
             if (!(trans_sock = fork())) {
                 close(sock_trans_pfc[1]);
-                Transducer__setComunicationChannel(transducer,sock_trans_pfc[0], SOCKCH);
+                Transducer__setComunicationChannel(transducer, sock_trans_pfc[0], SOCKCH);
                 close(sock_trans_pfc[0]);
             }
             if (!(trans_pipe = fork())) {
                 close(trans_pfc.pipe[1]);
                 Transducer__setComunicationChannel(transducer, trans_pfc.pipe[0], PIPECH);
+                close(trans_pfc.pipe[0]);
+            }
+            if (!(trans_file = fork())) {
+                int fileDescriptor;
+                if ((fileDescriptor = open(TRANPFC_FILE, O_RDONLY)) < 0)  /* -1 signals an error */
+                {
+                    perror("[ERR] {Transducers} Can't open file");
+                    exit(0);
+                } else {
+                    Transducer__setComunicationChannel(transducer, fileDescriptor, FILECH);
+                }
+                close(fileDescriptor);
             }
         }
 
@@ -127,3 +154,5 @@ int main(int argc, char *argv[]) {
     }
     return 0;
 }
+
+// TODO: Handle SIGTERM and remove all temp files before quit

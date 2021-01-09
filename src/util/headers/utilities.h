@@ -14,6 +14,8 @@ typedef struct {
     enum { SOCKCH, PIPECH, FILECH } type;
 } Channel;
 
+char *Channel__extendedName(int channelType);
+
 /*:: Generic Math Formulae :*/
 double deg2rad(double);
 
