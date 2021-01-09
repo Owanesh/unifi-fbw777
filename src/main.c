@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "headers/pfc.h"
+#include "headers/wes.h"
 #include "headers/failureGenerator.h"
 #include "headers/transducers.h"
 #include "util/headers/utilities.h"
@@ -10,10 +11,10 @@
 #include <fcntl.h>
 
 int main(int argc, char *argv[]) {
-    Pipe pfcs[3];
-    pipe(pfcs[0].pipe);
-    pipe(pfcs[1].pipe);
-    pipe(pfcs[2].pipe);
+    Pipe PFCs[3];
+    pipe(PFCs[0].pipe);
+    pipe(PFCs[1].pipe);
+    pipe(PFCs[2].pipe);
 
     int sock_trans_pfc[2];
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, sock_trans_pfc) < 0) {
@@ -29,8 +30,7 @@ int main(int argc, char *argv[]) {
     welcomeMessage();
 
     pid_t PFC_pid_list[3];
-    pid_t failureGen_pid;
-    pid_t transducers_pid;
+    pid_t failureGen_pid, transducers_pid, wes_pid;
 
     PFC *PFC_list[3];
     PFC_list[0] = PFC__create(filename, "Alpha");
@@ -45,9 +45,9 @@ int main(int argc, char *argv[]) {
         close(sock_trans_pfc[0]);
         PFC__setComunicationChannel(PFC_list[0], sock_trans_pfc[1], SOCKCH);
 
-        close(pfcs[0].pipe[0]);
-        write(pfcs[0].pipe[1], PFC_list[0], sizeof(PFC *));
-        close(pfcs[0].pipe[1]);
+        close(PFCs[0].pipe[0]);
+        write(PFCs[0].pipe[1], PFC_list[0], sizeof(PFC *));
+        close(PFCs[0].pipe[1]);
 
         sleep(2);
         PFC_read(PFC_list[0]);
@@ -64,9 +64,9 @@ int main(int argc, char *argv[]) {
         close(trans_pfc.pipe[0]);
         PFC__setComunicationChannel(PFC_list[1], trans_pfc.pipe[1], PIPECH);
 
-        close(pfcs[1].pipe[0]);
-        write(pfcs[1].pipe[1], PFC_list[1], sizeof(PFC *));
-        close(pfcs[1].pipe[1]);
+        close(PFCs[1].pipe[0]);
+        write(PFCs[1].pipe[1], PFC_list[1], sizeof(PFC *));
+        close(PFCs[1].pipe[1]);
 
         sleep(2);
         PFC_read(PFC_list[1]);
@@ -81,6 +81,7 @@ int main(int argc, char *argv[]) {
         signal(SIGUSR1, handle_sigUSR1);
 
         int fileDescriptor;
+        unlink(TRANPFC_FILE);
         if ((fileDescriptor = open(TRANPFC_FILE, O_RDWR | O_CREAT, 0666)) < 0)  /* -1 signals an error */
         {
             perror("open failed...");
@@ -88,14 +89,12 @@ int main(int argc, char *argv[]) {
         } else {
             PFC__setComunicationChannel(PFC_list[2], fileDescriptor, FILECH);
 
-
-            close(pfcs[2].pipe[0]);
-            write(pfcs[2].pipe[1], PFC_list[2], sizeof(PFC *));
-            close(pfcs[2].pipe[1]);
+            close(PFCs[2].pipe[0]);
+            write(PFCs[2].pipe[1], PFC_list[2], sizeof(PFC *));
+            close(PFCs[2].pipe[1]);
             sleep(2);
             PFC_read(PFC_list[2]);
             PFC__destroy(PFC_list[2]);
-
 
             close(fileDescriptor);
         }
@@ -105,21 +104,26 @@ int main(int argc, char *argv[]) {
     } else {
         printf("[log] Aeroplanetty.pid %d\n", getpid());
 
-        close(pfcs[0].pipe[1]);
-        read(pfcs[0].pipe[0], PFC_list[0], sizeof(PFC *));
-        close(pfcs[0].pipe[0]);
+        close(PFCs[0].pipe[1]);
+        read(PFCs[0].pipe[0], PFC_list[0], sizeof(PFC *));
+        close(PFCs[0].pipe[0]);
 
-        close(pfcs[1].pipe[1]);
-        read(pfcs[1].pipe[0], PFC_list[1], sizeof(PFC *));
-        close(pfcs[1].pipe[0]);
+        close(PFCs[1].pipe[1]);
+        read(PFCs[1].pipe[0], PFC_list[1], sizeof(PFC *));
+        close(PFCs[1].pipe[0]);
 
-        close(pfcs[2].pipe[1]);
-        read(pfcs[2].pipe[0], PFC_list[2], sizeof(PFC *));
-        close(pfcs[2].pipe[0]);
+        close(PFCs[2].pipe[1]);
+        read(PFCs[2].pipe[0], PFC_list[2], sizeof(PFC *));
+        close(PFCs[2].pipe[0]);
 
         if (!(failureGen_pid = fork())) {
             FailureGen *fGen = FailureGen__create();
             FailureGen__init(fGen, PFC_list);
+        }
+        if (!(wes_pid = fork())) {
+            sleep(2);
+            Wes *wes = Wes__create();
+            Wes__start(wes);
         }
         if (!(transducers_pid = fork())) {
             pid_t trans_sock, trans_pipe, trans_file;
@@ -147,6 +151,7 @@ int main(int argc, char *argv[]) {
                 close(fileDescriptor);
             }
         }
+
 
         wait(&PFC_pid_list[0]);
         wait(&PFC_pid_list[1]);

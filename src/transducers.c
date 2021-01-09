@@ -4,11 +4,11 @@
 #include <stdlib.h>
 // TODO : {DOCS} write some documentation for each function below
 
-void transducer__initFileLog(FILE *filePointer, const char *fileName);
+void transducer__initFileLog(FILE *filePointer, const char *fileName, pid_t pid, char *className);
 
 void transducer__readFromSocket();
 
-void transducer__speedLog(FILE *filePointer, char *fileName, int PFCPid, char *PFCName, double PFCSpeed);
+void transducer__speedLog(FILE *filePointer, char *fileName, double PFCSpeed);
 
 void Transducer__init(Transducer *self, PFC *PFC_list[3]) {
     // set reference for all running PFCs
@@ -17,14 +17,21 @@ void Transducer__init(Transducer *self, PFC *PFC_list[3]) {
     self->PFC_list[2] = &PFC_list[2];
 
     // set headers of logfiles
-    transducer__initFileLog(self->log_files[0], TRANSDUCERS_LOGFILE1);
-    transducer__initFileLog(self->log_files[1], TRANSDUCERS_LOGFILE2);
-    transducer__initFileLog(self->log_files[2], TRANSDUCERS_LOGFILE3);
+    transducer__initFileLog(self->log_files[0], TRANSDUCERS_LOGFILE1,
+                            (*self->PFC_list[0])->selfPid,
+                            (*self->PFC_list[0])->name);
+
+    transducer__initFileLog(self->log_files[1], TRANSDUCERS_LOGFILE2,
+                            (*self->PFC_list[1])->selfPid,
+                            (*self->PFC_list[1])->name);
+
+    transducer__initFileLog(self->log_files[2], TRANSDUCERS_LOGFILE3,
+                            (*self->PFC_list[2])->selfPid,
+                            (*self->PFC_list[2])->name);
 }
 
 
-void transducer__readFromChannel(Transducer *self, int channel, int channelType, char *fileName, int indexLogfile,
-                                 int indexPFC) {
+void transducer__readFromChannel(Transducer *self, int channel, int channelType, char *fileName, int indexLogfile) {
     sleep(2); //sync
     static double res;
     do {
@@ -37,8 +44,6 @@ void transducer__readFromChannel(Transducer *self, int channel, int channelType,
                 //printf("[%d]\treads\t[%f]\t[%d] \n",getpid(),res,channelType);
                 transducer__speedLog(self->log_files[indexLogfile],
                                      fileName,
-                                     (*self->PFC_list[indexPFC])->selfPid,
-                                     (*self->PFC_list[indexPFC])->name,
                                      res);
             }
         }// else read from file
@@ -49,14 +54,14 @@ void transducer__readFromChannel(Transducer *self, int channel, int channelType,
 void transducer__readFromSocket(Transducer *self) {
     transducer__readFromChannel(self, self->comunicationChannel.channel, SOCKCH,
                                 TRANSDUCERS_LOGFILE1,
-                                0, 0);
+                                0);
 
 }
 
 void transducer__readFromPipe(Transducer *self) {
     transducer__readFromChannel(self, self->comunicationChannel.channel, PIPECH,
                                 TRANSDUCERS_LOGFILE2,
-                                1, 1);
+                                1);
 }
 
 void transducer__readFromFile(Transducer *self) {
@@ -80,8 +85,6 @@ void transducer__readFromFile(Transducer *self) {
         while (read(self->comunicationChannel.channel, &res, sizeof(double)) > 0) { /* 0 signals EOF */
             transducer__speedLog(self->log_files[2],
                                  TRANSDUCERS_LOGFILE3,
-                                 (*self->PFC_list[2])->selfPid,
-                                 (*self->PFC_list[2])->name,
                                  res);
         }
         lock.l_type = F_UNLCK;
@@ -97,12 +100,10 @@ Transducer *Transducer__create() {
 
 
 /*:: Utilities :*/
-void transducer__initFileLog(FILE *filePointer, const char *fileName) {
+void transducer__initFileLog(FILE *filePointer, const char *fileName, pid_t pid, char *className) {
     if (fileExists(fileName))
         unlink(fileName);
-    filePointer = fopen(fileName, "w");
-    fprintf(filePointer, "------------------------\n");
-    fprintf(filePointer, "Process\tName\tSpeed\n");
+    filePointer = fopen(fileName, "w+");
     fclose(filePointer);
 }
 
@@ -120,13 +121,13 @@ void Transducer__setComunicationChannel(Transducer *self, int channel, int chann
     }
 }
 
-void transducer__speedLog(FILE *filePointer, char *fileName, int PFCPid, char *PFCName, double PFCSpeed) {
+void transducer__speedLog(FILE *filePointer, char *fileName, double PFCSpeed) {
     if (fileExists(fileName)) {
         filePointer = fopen(fileName, "a");
     } else {
         filePointer = fopen(fileName, "w");
     }
-    fprintf(filePointer, "%d\t%s\t%f\n", PFCPid, PFCName, PFCSpeed);
+    fprintf(filePointer, "%f\n", PFCSpeed);
     fclose(filePointer);
 }
 
