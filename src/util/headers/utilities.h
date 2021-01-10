@@ -30,6 +30,8 @@ __unused int str2i(const char* str);
 
 /*:: Mathematical function :*/
 int random_number(int min_num, int max_num);
+bool fequal(double a, double b);
+
 /*:: File manipulation :*/
 bool fileExists(const char *filename);
 

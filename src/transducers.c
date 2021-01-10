@@ -103,7 +103,7 @@ Transducer *Transducer__create() {
 void transducer__initFileLog(FILE *filePointer, const char *fileName, pid_t pid, char *className) {
     if (fileExists(fileName))
         unlink(fileName);
-    filePointer = fopen(fileName, "w+");
+    filePointer = fopen(fileName, "w");
     fclose(filePointer);
 }
 
@@ -122,11 +122,7 @@ void Transducer__setComunicationChannel(Transducer *self, int channel, int chann
 }
 
 void transducer__speedLog(FILE *filePointer, char *fileName, double PFCSpeed) {
-    if (fileExists(fileName)) {
         filePointer = fopen(fileName, "a");
-    } else {
-        filePointer = fopen(fileName, "w");
-    }
     fprintf(filePointer, "%f\n", PFCSpeed);
     fclose(filePointer);
 }

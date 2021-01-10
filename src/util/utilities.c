@@ -244,3 +244,8 @@ char *Channel__extendedName(int channelType) {
             return "File";
     }
 }
+
+bool fequal(double a, double b)
+{
+    return fabs(a-b) < 0.000001;
+}

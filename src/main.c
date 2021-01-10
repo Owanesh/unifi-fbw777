@@ -119,11 +119,7 @@ int main(int argc, char *argv[]) {
         if (!(failureGen_pid = fork())) {
             FailureGen *fGen = FailureGen__create();
             FailureGen__init(fGen, PFC_list);
-        }
-        if (!(wes_pid = fork())) {
-            sleep(2);
-            Wes *wes = Wes__create();
-            Wes__start(wes);
+            exit(0);
         }
         if (!(transducers_pid = fork())) {
             pid_t trans_sock, trans_pipe, trans_file;
@@ -150,9 +146,18 @@ int main(int argc, char *argv[]) {
                 }
                 close(fileDescriptor);
             }
+            exit(0);
+
         }
-
-
+        if (!(wes_pid = fork())) {
+            sleep(2);
+            Wes *wes = Wes__create();
+            Wes__start(wes);
+            exit(0);
+        }
+        wait(&failureGen_pid);
+        wait(&transducers_pid);
+        wait(&wes_pid);
         wait(&PFC_pid_list[0]);
         wait(&PFC_pid_list[1]);
         wait(&PFC_pid_list[2]);
