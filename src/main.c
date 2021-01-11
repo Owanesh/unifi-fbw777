@@ -10,6 +10,8 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 
+// TODO : refactor of libraries to obtain less impact on memory
+
 int main(int argc, char *argv[]) {
     Pipe PFCs[3];
     pipe(PFCs[0].pipe);
@@ -43,7 +45,7 @@ int main(int argc, char *argv[]) {
         signal(SIGUSR1, handle_sigUSR1);
 
         close(sock_trans_pfc[0]);
-        PFC__setComunicationChannel(PFC_list[0], sock_trans_pfc[1], SOCKCH);
+        PFC__setCommunicationChannel(PFC_list[0], sock_trans_pfc[1], SOCKCH);
 
         close(PFCs[0].pipe[0]);
         write(PFCs[0].pipe[1], PFC_list[0], sizeof(PFC *));
@@ -62,7 +64,7 @@ int main(int argc, char *argv[]) {
         signal(SIGUSR1, handle_sigUSR1);
 
         close(trans_pfc.pipe[0]);
-        PFC__setComunicationChannel(PFC_list[1], trans_pfc.pipe[1], PIPECH);
+        PFC__setCommunicationChannel(PFC_list[1], trans_pfc.pipe[1], PIPECH);
 
         close(PFCs[1].pipe[0]);
         write(PFCs[1].pipe[1], PFC_list[1], sizeof(PFC *));
@@ -82,22 +84,20 @@ int main(int argc, char *argv[]) {
 
         int fileDescriptor;
         unlink(TRANPFC_FILE);
-        if ((fileDescriptor = open(TRANPFC_FILE, O_RDWR | O_CREAT, 0666)) < 0)  /* -1 signals an error */
+        while ((fileDescriptor = open(TRANPFC_FILE, O_RDWR | O_CREAT, 0666)) < 0)  /* -1 signals an error */
         {
-            perror("open failed...");
-            exit(0);
-        } else {
-            PFC__setComunicationChannel(PFC_list[2], fileDescriptor, FILECH);
-
-            close(PFCs[2].pipe[0]);
-            write(PFCs[2].pipe[1], PFC_list[2], sizeof(PFC *));
-            close(PFCs[2].pipe[1]);
-            sleep(2);
-            PFC_read(PFC_list[2]);
-            PFC__destroy(PFC_list[2]);
-
-            close(fileDescriptor);
+            perror("[ERR][PFC #3] Open failed...");
         }
+        PFC__setCommunicationChannel(PFC_list[2], fileDescriptor, FILECH);
+
+        close(PFCs[2].pipe[0]);
+        write(PFCs[2].pipe[1], PFC_list[2], sizeof(PFC *));
+        close(PFCs[2].pipe[1]);
+        sleep(2);
+        PFC_read(PFC_list[2]);
+        PFC__destroy(PFC_list[2]);
+
+        close(fileDescriptor);
 
         exit(0);
 
@@ -127,22 +127,22 @@ int main(int argc, char *argv[]) {
             Transducer__init(transducer, PFC_list);
             if (!(trans_sock = fork())) {
                 close(sock_trans_pfc[1]);
-                Transducer__setComunicationChannel(transducer, sock_trans_pfc[0], SOCKCH);
+                Transducer__setCommunicationChannel(transducer, sock_trans_pfc[0], SOCKCH);
                 close(sock_trans_pfc[0]);
             }
             if (!(trans_pipe = fork())) {
                 close(trans_pfc.pipe[1]);
-                Transducer__setComunicationChannel(transducer, trans_pfc.pipe[0], PIPECH);
+                Transducer__setCommunicationChannel(transducer, trans_pfc.pipe[0], PIPECH);
                 close(trans_pfc.pipe[0]);
             }
             if (!(trans_file = fork())) {
                 int fileDescriptor;
                 if ((fileDescriptor = open(TRANPFC_FILE, O_RDONLY)) < 0)  /* -1 signals an error */
                 {
-                    perror("[ERR] {Transducers} Can't open file");
+                    perror("[ERR][Transducer]\tCan't open file");
                     exit(0);
                 } else {
-                    Transducer__setComunicationChannel(transducer, fileDescriptor, FILECH);
+                    Transducer__setCommunicationChannel(transducer, fileDescriptor, FILECH);
                 }
                 close(fileDescriptor);
             }
@@ -150,9 +150,9 @@ int main(int argc, char *argv[]) {
 
         }
         if (!(wes_pid = fork())) {
-            sleep(2);
+            sleep(3);
             Wes *wes = Wes__create();
-            Wes__start(wes);
+
             exit(0);
         }
         wait(&failureGen_pid);

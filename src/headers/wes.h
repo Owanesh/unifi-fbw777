@@ -5,14 +5,20 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  WES struct                                        :*/
+/*::    fileData : reference to FILEs, used for reading :*/
+/*::               values from transducers              :*/
+/*::    selfPid : a copy of pid of process who runs this:*/
+/*::                code                                :*/
+/*::    log_file : reference to FILE, used for logging  :*/
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 typedef struct {
-      FILE *logFiles[3];
+      FILE *fileData[3];
       pid_t selfPid;
+      FILE *logFile;
 } Wes;
 
-_Noreturn void Wes__startReading(Wes *self, char *fnames[3]);
-void Wes__start(Wes *self);
 
 Wes *Wes__create();
-void     compare_values(double xray, double yankee, double zulu);
-#endif //UNIFI_FBW777_WES_H
+#endif
