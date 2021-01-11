@@ -2,8 +2,6 @@
 #define UNIFI_FBW777_WES_H
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*::  WES struct                                        :*/

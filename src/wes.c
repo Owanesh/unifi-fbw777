@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "headers/wes.h"
 #include "util/headers/utilities.h"
 #include "util/headers/constant.h"

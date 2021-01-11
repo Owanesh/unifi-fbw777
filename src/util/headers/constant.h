@@ -4,14 +4,10 @@
 #define READ_SPEED 1000000 //used with usleep, less than 1 sec
 #define EARTH_RADIUS 6365
 #define PROBABILITY_NUMBER 3
+
 /*:: EMEA Standard Codes   :*/
 #define EMEA_GPGLL "$GPGLL"
-/* #define EMEA_GPGSV "$GPGSV"
- * #define EMEA_GPGSA "$GPGSA"
- * #define EMEA_GPVTG "$GPVTG"
- * #define EMEA_GPRMC "$GPRMC"
- * #define EMEA_GPGGA "$GPGGA"
-*/
+
 #define EMEA_SEP ","
 
 /*:: RESET VALUES :*/
@@ -21,6 +17,7 @@
 #define SHIFTER_RESET 0
 
 /*:: TMP FILE PATH :*/
+
 #define TMPFOLDER ".tmp/"
 #define FAILUREGEN_LOGFILE "failures.log"
 #define WES_LOGFILE "status.log"

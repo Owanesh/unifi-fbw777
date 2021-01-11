@@ -6,7 +6,7 @@
 #include <unistd.h>
 /*:: IPC :*/
 #include <sys/socket.h>
-#include <sys/un.h> /* For AF_UNIX sockets */
+#include <sys/un.h>
 
 /*:: Custom resources:*/
 #include "headers/utilities.h"
@@ -84,10 +84,10 @@ bool fileExists(const char *filename) {
 /*::      content: string who maybe contains "search" arg           :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 bool strContains(const char *search, const char *content) {
-    char *finded;
+    char *found;
     if (!search || !content) return -1;
-    finded = strstr(content, search);
-    return finded ? true : false;
+    found = strstr(content, search);
+    return found ? true : false;
 }
 
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
@@ -216,22 +216,28 @@ int getIndexOfPFCList(pid_t PFC_pid, pid_t *PFC_list, int position) {
 
 __unused int make_named_socket(const char *filename) {
     unlink(filename);
-    struct sockaddr_un sockfile;
+    struct sockaddr_un sockFile;
     int sock;
     sock = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock < 0) {
         perror("[ERR] Socket error: ");
         exit(EXIT_FAILURE);
     }
-    sockfile.sun_family = AF_UNIX;
-    strcpy (sockfile.sun_path, filename);
-    if (bind(sock, (struct sockaddr *) &sockfile, sizeof(sockfile)) < 0) {
+    sockFile.sun_family = AF_UNIX;
+    strcpy (sockFile.sun_path, filename);
+    if (bind(sock, (struct sockaddr *) &sockFile, sizeof(sockFile)) < 0) {
         perror("[ERR] Bind error : ");
         exit(EXIT_FAILURE);
     }
     return sock;
 }
 
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*:: Provides an extended name for Channel.type that is an enum :*/
+/*::     SOCKCH : Socket                                        :*/
+/*::     PIPECH : Pipe                                          :*/
+/*::     FILECH : File                                          :*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 char *Channel__extendedName(int channelType) {
     switch (channelType) {
         default:
@@ -245,7 +251,12 @@ char *Channel__extendedName(int channelType) {
     }
 }
 
-bool fequal(double a, double b)
-{
-    return fabs(a-b) < 0.000001;
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*:: fequal compares two doubles number                               :*/
+/*::     double a, b: double number that will be compared             :*/
+/*::  To compare them, will subtract each other and compare the result :*/
+/*:   with and entropy that determines what is the "level" of equity  :*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+bool fequal(double a, double b) {
+    return fabs(a - b) < 0.000001;
 }

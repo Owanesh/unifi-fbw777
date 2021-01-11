@@ -1,12 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "headers/pfc.h"
 #include "headers/wes.h"
 #include "headers/failureGenerator.h"
 #include "headers/transducers.h"
-#include "util/headers/utilities.h"
 #include "util/headers/signals.h"
-#include <signal.h>
 #include <sys/socket.h>
 #include <fcntl.h>
 

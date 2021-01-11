@@ -1,7 +1,8 @@
 #include "headers/pfc.h"
-/*:: IPC :*/
-#include <sys/socket.h>
-#include <sys/un.h> /* For AF_UNIX sockets */
+#include <unistd.h>
+#include <signal.h>
+#include <fcntl.h>
+
 
 int shifter;
 
@@ -13,14 +14,14 @@ void PFC__reset(PFC *self);
 
 void PFC__backupFPointer(PFC *self);
 
-/* :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*:: UpdatePosition allows to update arrays referred to PFCs GPGLL */
-/*::     PFC *self : Reference to PFC object                        */
-/*::     Other parameters according to GPGLL:                       */
-/*::        double latitude, longitude                              */
-/*::        int timestamp                                           */
-/*::     Return: bool -> necessity to update PFCParameters          */
-/* :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*:: UpdatePosition allows to update arrays referred to PFCs GPGLL  :*/
+/*::     PFC *self : Reference to PFC object                        :*/
+/*::     Other parameters according to GPGLL:                       :*/
+/*::        double latitude, longitude                              :*/
+/*::        int timestamp                                           :*/
+/*::     Return: bool -> necessity to update PFCParameters          :*/
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 bool updatePosition(PFC *self, double latitude, double longitude, long timestamp) {
     if (self->latitudes[0] == PFC_RESETVAL || self->longitudes[0] == PFC_RESETVAL) { // Maybe it's the first time
         self->latitudes[0] = latitude;
@@ -56,8 +57,8 @@ void PFCParameter__update(PFC *self, double speed, double distance) {
 /*::  Convert a GPGLL line into parameters for PFC reference pointer :*/
 /*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 void gpgll2PFCParameters(char *line, PFC *self) {
-    int tokenFinded = strTokenCount(line, EMEA_SEP[0]);
-    char **splittedLineBuffer[tokenFinded];
+    int tokenFound = strTokenCount(line, EMEA_SEP[0]);
+    char **splittedLineBuffer[tokenFound];
     strSplit(line, EMEA_SEP, (char **) splittedLineBuffer);
     if (updatePosition(self,
                        str2double((char *) splittedLineBuffer[1]),
@@ -198,7 +199,7 @@ void PFC_log(PFC *self) {
             exit(0);
         } else {
             if (write(self->com.channel, (&self->param.speed), sizeof(double)) < 0) {
-                perror("[ERR]{PFC]\tCan't log information");
+                perror("[ERR][PFC]\tCan't log information");
                 exit(0);
             } else {
                 lock.l_type = F_UNLCK;
@@ -211,7 +212,7 @@ void PFC_log(PFC *self) {
 
 }
 
-void PFC__setComunicationChannel(PFC *self, int channel, int channelType) {
+void PFC__setCommunicationChannel(PFC *self, int channel, int channelType) {
     self->com.channel = channel;
     self->com.type = channelType;
 }

@@ -1,20 +1,16 @@
 #ifndef UNIFI_FBW777_PFC_H
 #define UNIFI_FBW777_PFC_H
 
-#include <unistd.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 #include "../util/headers/utilities.h"
 #include "../util/headers/constant.h"
-#include <signal.h>
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <string.h>
+
+
+
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::  PFCParameter is an inner sub-struct of PFC          :*/
+/*::  stores information about speed and distance         :*/
+/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 typedef struct {
     double distance;
     double speed;
@@ -37,14 +33,11 @@ typedef struct PFC {
     Channel com;
 } PFC;
 
+
 PFC *PFC__create(char *filename, char *name);
-
 void PFC_read(PFC *self);
-
 void PFC__destroy(PFC *self);
-
-void PFC__setComunicationChannel(PFC *self, int channel, int channelType);
+void PFC__setCommunicationChannel(PFC *self, int channel, int channelType);
 void PFC_log(PFC *self);
-
 
 #endif //UNIFI_FBW777_PFC_H
