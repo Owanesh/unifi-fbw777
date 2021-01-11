@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include "headers/wes.h"
+#include "headers/pfcDisconnectSwitch.h"
 #include "util/headers/utilities.h"
 #include "util/headers/constant.h"
 
@@ -79,21 +80,24 @@ void Wes__compareAndLog(Wes *self, double xray, double yankee, double zulu) {
         printf("\033[0;32m[WES]\t(OK)\t%f\t%f\t%f\n\033[0m", xray, yankee, zulu);
         Wes__logAction(self, "OK");
     } else if (xray != yankee && yankee != zulu && zulu != xray) {
-        // TODO: Send signal of emergency to PFC Disconnect Switch
         printf("\033[0;31m[WES]\t%s\033[0m\n", WES_MSG_EMERGENCY);
         Wes__logAction(self, WES_MSG_EMERGENCY);
+        pds__handleMessage(WES_EMERGENCY,ERRVAL);
     } else {
         if (!fequal(yankee, xray) && fequal(xray, zulu)) { //yankee is different
             printf("\033[0;31m[WES]\t%s\033[0m\n", WES_MSG_ERRPFC2);
             Wes__logAction(self, WES_MSG_ERRPFC2);
+            pds__handleMessage(WES_ERROR,1);
         }
         if (fequal(yankee, xray) && !fequal(zulu, xray)) { //zulu is different
             printf("\033[0;31m[WES]\t%s\033[0m\n", WES_MSG_ERRPFC3);
             Wes__logAction(self, WES_MSG_ERRPFC3);
+            pds__handleMessage(WES_ERROR,2);
         }
         if (!fequal(yankee, xray) && fequal(yankee, zulu)) { //yankee is different
             printf("\033[0;31m[WES]\t%s\033[0m\n", WES_MSG_ERRPFC1);
             Wes__logAction(self, WES_MSG_ERRPFC1);
+            pds__handleMessage(WES_ERROR,0);
         }
     }
     fflush(stdout);

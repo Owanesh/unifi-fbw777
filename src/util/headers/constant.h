@@ -15,6 +15,7 @@
 #define PFC_RESETVAL -1
 #define FILESIZE_RESET -1
 #define SHIFTER_RESET 0
+#define ERRVAL -1
 
 /*:: TMP FILE PATH :*/
 

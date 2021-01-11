@@ -254,8 +254,8 @@ char *Channel__extendedName(int channelType) {
 /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 /*:: fequal compares two doubles number                               :*/
 /*::     double a, b: double number that will be compared             :*/
-/*::  To compare them, will subtract each other and compare the result :*/
-/*:   with and entropy that determines what is the "level" of equity  :*/
+/*::  To compare them, will subtract each other and compare the result:*/
+/*::  with and entropy that determines what is the "level" of equity  :*/
 /* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 bool fequal(double a, double b) {
     return fabs(a - b) < 0.000001;

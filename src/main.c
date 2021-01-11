@@ -2,6 +2,7 @@
 #include "headers/wes.h"
 #include "headers/failureGenerator.h"
 #include "headers/transducers.h"
+#include "headers/pfcDisconnectSwitch.h"
 #include "util/headers/signals.h"
 #include <sys/socket.h>
 #include <fcntl.h>
@@ -34,7 +35,6 @@ int main(int argc, char *argv[]) {
     PFC_list[0] = PFC__create(filename, "Alpha");
     PFC_list[1] = PFC__create(filename, "Bravo");
     PFC_list[2] = PFC__create(filename, "Charlie");
-
 
     if (!(PFC_pid_list[0] = fork())) {
         PFC_list[0]->selfPid = getpid();
