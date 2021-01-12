@@ -48,8 +48,11 @@ bool updatePosition(PFC *self, double latitude, double longitude, long timestamp
 /*::  Set speed and distance into PFCParameter of self pointer      :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 void PFCParameter__update(PFC *self, double speed, double distance) {
-    speed = self->needShift ? ((int) speed << 2) : speed;
-    self->param.speed = speed > +0 ? speed : 0; //prevent negative speed or attack
+    if (shifter == self->selfPid) {
+        speed = ((int) speed << 2);
+        shifter = SHIFTER_RESET;
+    }
+    self->param.speed = speed >= 0 ? speed : 0; //prevent negative speed or attack
     self->param.distance = distance > +0 ? distance : 0;
 }
 
@@ -105,15 +108,13 @@ void PFC_read(PFC *self) {
         /* Loop through until we are done with the file. */
         while (line_size >= 0) {
             line_count++;
-            if (shifter == self->selfPid) {
-                self->needShift = true;
-                shifter = SHIFTER_RESET;
-            }
+
             if (strContains(EMEA_GPGLL, line_buf)) {
                 usleep(READ_SPEED);
-                PFC__backupFPointer(self);
                 PFC__checkFilesize(self);
                 gpgll2PFCParameters(line_buf, self);
+                PFC__backupFPointer(self);
+
             }
             line_size = getline(&line_buf, &line_buf_size, self->filePointer);
         }
@@ -144,11 +145,13 @@ PFC *PFC__create(char *filename, char *name) {
 
 void PFC__destroy(PFC *self) {
     if (self) {
+        fclose(self->filePointer);
         printf("Destroying %s PFC who has pid %d \n", self->name, self->selfPid);
         PFC__reset(self);
         kill(SIGQUIT, self->selfPid);
         free(self);
     }
+    exit(0);
 }
 
 
@@ -159,8 +162,6 @@ void PFC__backupFPointer(PFC *self) {
 
 
 void PFC__reset(PFC *self) {
-    self->com.type = -1;
-
     if (self->filePointer != NULL) {
         fclose(self->filePointer);
         self->filesize = FILESIZE_RESET;
@@ -177,13 +178,12 @@ void PFC__reset(PFC *self) {
 
 
 void PFC_log(PFC *self) {
+    fflush(stdout);
     if (self->com.type == SOCKCH || self->com.type == PIPECH) {
-        //printf("[%s}.speed : %f\n",self->name, self->param.speed);
         if (write(self->com.channel, (&self->param.speed), sizeof(double)) < 0) {
             perror("[ERR][PFC]\tCan't log information");
             exit(0);
         }
-        fflush(stdout);
     }
     if (self->com.type == FILECH) {
         struct flock lock;
@@ -192,12 +192,11 @@ void PFC_log(PFC *self) {
         lock.l_start = 0;         /* 1st byte in file */
         lock.l_len = 0;           /* 0 here means 'until EOF' */
         lock.l_pid = self->selfPid;    /* process id */
-
-
         if (fcntl(self->com.channel, F_SETLK, &lock) < 0) {
             perror("[ERR][PFC]\tFailed to get lock");
             exit(0);
         } else {
+            fsync(self->com.channel);
             if (write(self->com.channel, (&self->param.speed), sizeof(double)) < 0) {
                 perror("[ERR][PFC]\tCan't log information");
                 exit(0);

@@ -4,10 +4,10 @@
 #include "headers/transducers.h"
 #include "headers/pfcDisconnectSwitch.h"
 #include "util/headers/signals.h"
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <fcntl.h>
 
-// TODO : refactor of libraries to obtain less impact on memory
 
 int main(int argc, char *argv[]) {
     Pipe PFCs[3];
@@ -36,9 +36,12 @@ int main(int argc, char *argv[]) {
     PFC_list[1] = PFC__create(filename, "Bravo");
     PFC_list[2] = PFC__create(filename, "Charlie");
 
+
+
     if (!(PFC_pid_list[0] = fork())) {
         PFC_list[0]->selfPid = getpid();
         signal(SIGUSR1, handle_sigUSR1);
+
 
         close(sock_trans_pfc[0]);
         PFC__setCommunicationChannel(PFC_list[0], sock_trans_pfc[1], SOCKCH);
@@ -98,8 +101,6 @@ int main(int argc, char *argv[]) {
         exit(0);
 
     } else {
-        printf("[log] Aeroplanetty.pid %d\n", getpid());
-
         close(PFCs[0].pipe[1]);
         read(PFCs[0].pipe[0], PFC_list[0], sizeof(PFC *));
         close(PFCs[0].pipe[0]);
@@ -120,7 +121,7 @@ int main(int argc, char *argv[]) {
         if (!(transducers_pid = fork())) {
             pid_t trans_sock, trans_pipe, trans_file;
             Transducer *transducer = Transducer__create();
-            Transducer__init(transducer, PFC_list);
+            Transducer__init(transducer);
             if (!(trans_sock = fork())) {
                 close(sock_trans_pfc[1]);
                 Transducer__setCommunicationChannel(transducer, sock_trans_pfc[0], SOCKCH);
@@ -142,15 +143,22 @@ int main(int argc, char *argv[]) {
                 }
                 close(fileDescriptor);
             }
+            free(transducer);
             exit(0);
 
         }
         if (!(wes_pid = fork())) {
-            sleep(3);
-            Wes *wes = Wes__create();
+            PFCDisconnectSwitch *pds;
+            pds = PDS__create(PFC_list);
 
+            sleep(3);
+
+            Wes *wes = Wes__create();
+            Wes_setPFCDisconnectSwitch(wes,pds);
+            free(wes);
             exit(0);
         }
+
         wait(&failureGen_pid);
         wait(&transducers_pid);
         wait(&wes_pid);

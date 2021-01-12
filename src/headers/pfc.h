@@ -39,5 +39,6 @@ void PFC_read(PFC *self);
 void PFC__destroy(PFC *self);
 void PFC__setCommunicationChannel(PFC *self, int channel, int channelType);
 void PFC_log(PFC *self);
+void PFC__reset(PFC *self);
 
-#endif //UNIFI_FBW777_PFC_H
+#endif

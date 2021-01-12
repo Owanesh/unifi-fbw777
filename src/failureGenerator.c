@@ -98,13 +98,27 @@ void logEvent(FailureGen *self, PFC *pfc, int signum) {
     } else {
         self->log_file = fopen(FAILUREGEN_LOGFILE, "w");
     }
-    fprintf(self->log_file, "%d\t%s\t%d\n", pfc->selfPid, pfc->name, signum);
+    char *extendedNameOfSignal;
+    switch (signum) {
+        case SIGSTOP:
+            extendedNameOfSignal = "SIGSTOP";
+            break;
+        case SIGINT:
+            extendedNameOfSignal = "SIGINT";
+            break;
+        case SIGCONT:
+            extendedNameOfSignal = "SIGCONT";
+            break;
+        case SIGUSR1:
+            extendedNameOfSignal = "SIGUSR1";
+            break;
+    }
+    fprintf(self->log_file, "%d\t%s\t%d [%s]\n", pfc->selfPid, pfc->name, signum,extendedNameOfSignal);
     fclose(self->log_file);
 }
 
 void failureGenerator_initFileLog(FailureGen *self) {
-    if (fileExists(FAILUREGEN_LOGFILE))
-        unlink(FAILUREGEN_LOGFILE);
+    unlink(FAILUREGEN_LOGFILE);
     self->log_file = fopen(FAILUREGEN_LOGFILE, "w");
     fprintf(self->log_file, "------------------------\n");
     fprintf(self->log_file, "Process\tName\tSignal\n");

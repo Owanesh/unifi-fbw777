@@ -39,14 +39,15 @@ void Wes__init(Wes *self) {
 
 Wes *Wes__create() {
     Wes *wes = (Wes *) malloc(sizeof(Wes));
-    wes->selfPid = getpid();
-    fflush(stdout);
     if (fileExists(WES_LOGFILE))
         unlink(WES_LOGFILE);
-    Wes__init(wes);
     return wes;
 }
 
+void Wes_setPFCDisconnectSwitch(Wes *self, PFCDisconnectSwitch *pds) {
+    self->pds = pds;
+    Wes__init(self);
+}
 
 
 void Wes__openFile(Wes *self, int index, char *fileName) {
@@ -63,44 +64,56 @@ void Wes__openFile(Wes *self, int index, char *fileName) {
 
 
 _Noreturn void Wes__startReading(Wes *self) {
-    double tempSpeed;
+    double xray, yankee, zulu;
     double values[3];
     do {
         sleep(1);
-        for (int index = 0; index < 3; index++) {
-            fscanf(self->fileData[index], "%lf", &tempSpeed);
-            values[index] = tempSpeed;
-        }
-        Wes__compareAndLog(self, values[0], values[1], values[2]);
+        fscanf(self->fileData[0], "%lf", &xray);
+        printf("wes is now reading from speedPFC%d value %f\n", 1, xray);
+        fscanf(self->fileData[1], "%lf", &yankee);
+        printf("wes is now reading from speedPFC%d value %f\n", 2, yankee);
+        fscanf(self->fileData[2], "%lf", &zulu);
+        printf("wes is now reading from speedPFC%d value %f\n", 3, zulu);
+        fflush(stdout);
+        Wes__compareAndLog(self, xray, yankee, zulu);
     } while (true);
 }
 
-void Wes__compareAndLog(Wes *self, double xray, double yankee, double zulu) {
+void Wes__compareAndLog(Wes *self, double xray,
+                        double yankee, double zulu) {
     if (fequal(yankee, xray) && fequal(xray, zulu)) {
         printf("\033[0;32m[WES]\t(OK)\t%f\t%f\t%f\n\033[0m", xray, yankee, zulu);
+        fflush(stdout);
         Wes__logAction(self, "OK");
     } else if (xray != yankee && yankee != zulu && zulu != xray) {
         printf("\033[0;31m[WES]\t%s\033[0m\n", WES_MSG_EMERGENCY);
+        fflush(stdout);
+
         Wes__logAction(self, WES_MSG_EMERGENCY);
-        pds__handleMessage(WES_EMERGENCY,ERRVAL);
+        pds__handleMessage(self->pds, WES_EMERGENCY, ERRVAL);
     } else {
         if (!fequal(yankee, xray) && fequal(xray, zulu)) { //yankee is different
             printf("\033[0;31m[WES]\t%s\033[0m\n", WES_MSG_ERRPFC2);
+            fflush(stdout);
+
             Wes__logAction(self, WES_MSG_ERRPFC2);
-            pds__handleMessage(WES_ERROR,1);
+            pds__handleMessage(self->pds, WES_ERROR, 1);
         }
         if (fequal(yankee, xray) && !fequal(zulu, xray)) { //zulu is different
             printf("\033[0;31m[WES]\t%s\033[0m\n", WES_MSG_ERRPFC3);
+            fflush(stdout);
+
             Wes__logAction(self, WES_MSG_ERRPFC3);
-            pds__handleMessage(WES_ERROR,2);
+            pds__handleMessage(self->pds, WES_ERROR, 2);
         }
         if (!fequal(yankee, xray) && fequal(yankee, zulu)) { //yankee is different
             printf("\033[0;31m[WES]\t%s\033[0m\n", WES_MSG_ERRPFC1);
+            fflush(stdout);
+
             Wes__logAction(self, WES_MSG_ERRPFC1);
-            pds__handleMessage(WES_ERROR,0);
+            pds__handleMessage(self->pds, WES_ERROR, 0);
         }
     }
-    fflush(stdout);
 }
 
 

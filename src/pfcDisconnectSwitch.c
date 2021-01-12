@@ -1,7 +1,9 @@
+#include "headers/pfcDisconnectSwitch.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 char checkStatusOf(pid_t pid) {
     int link[2];
@@ -32,7 +34,40 @@ char checkStatusOf(pid_t pid) {
     return statusCode[5];
 }
 
-void pds__handleMessage(int typeOfMessage, int extraInfo){
-    //TODO: if emergency message, stop the application, reboot process otherwise
+void pds__handleMessage(PFCDisconnectSwitch *self, int typeOfMessage, int extraInfo) {
+    if (typeOfMessage == WES_EMERGENCY) {
+        kill(getppid(), SIGTERM);
+        kill(getpgrp(), SIGTERM);
+    }
+    if (typeOfMessage == WES_ERROR) {
+        pid_t processPid = (*self->PFC_list[extraInfo])->selfPid;
+        int nextPfc = extraInfo > 1 ? extraInfo == 1 ? 2 : 0 : 1;
+        (*self->PFC_list[extraInfo])->seekPoint = (*self->PFC_list[nextPfc])->seekPoint;
+        char statusOfPidToRestart = checkStatusOf(processPid);
+        if (!statusOfPidToRestart) {
+            printf("[PFCDS]\tProcess %d has received a SIGINT signal or maybe isn't started at all \n", processPid);
+        }
+        else if (statusOfPidToRestart == 'T') {
+            printf("[PFCDS]\tProcess %d\tstopped by job control signal\t[SIGSTOP] \n",
+                   processPid);
+            PFC__reset(*self->PFC_list[extraInfo]);
+            PFC_read((*self->PFC_list[extraInfo]));
+            printf("[PFCDS]\tProcess %d\treceived now a new SIGCONT\n", processPid);
+        } else if (statusOfPidToRestart == 'S') {
+            printf("[PFCDS]\tProcess %d\tinterruptible sleep (waiting for an event to complete)\n",
+                   processPid);
+        } else
+            printf("[PFCDS]\tProcess %d\tstatus [%c]\tcheck table at `man ps` for more.\n",
+                   processPid, statusOfPidToRestart);
+    }
 }
 
+
+PFCDisconnectSwitch *PDS__create(PFC *PFC_list[3]) {
+    PFCDisconnectSwitch *pds = (PFCDisconnectSwitch *) malloc(sizeof(PFCDisconnectSwitch));
+    pds->PFC_list[0] = &PFC_list[0];
+    pds->PFC_list[1] = &PFC_list[1];
+    pds->PFC_list[2] = &PFC_list[2];
+
+    return pds;
+}

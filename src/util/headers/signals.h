@@ -7,5 +7,4 @@ extern int shifter;
 
 
 void handle_sigUSR1(int num);
-
-#endif //UNIFI_FBW777_SIGNALS_H
+#endif

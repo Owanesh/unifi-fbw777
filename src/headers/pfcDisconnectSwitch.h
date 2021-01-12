@@ -33,15 +33,15 @@
 /*::        +    is in the foreground process group                             :*/
 /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 
+#define WES_ERROR 2
+#define WES_EMERGENCY 1
+
 typedef struct {
-    PFC *pfcList[3];
-    enum {
-        WES_ERROR, WES_EMERGENCY
-    } action;
+    PFC **PFC_list[3];
     FILE *logFile;
 } PFCDisconnectSwitch;
 
-
-void pds__handleMessage(int typeOfMessage, int extraInfo);
+PFCDisconnectSwitch *PDS__create(PFC *PFC_list[3]);
+void pds__handleMessage(PFCDisconnectSwitch *self,int typeOfMessage, int extraInfo);
 
 #endif

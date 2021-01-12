@@ -4,24 +4,19 @@
 
 // TODO : {DOCS} write some documentation for each function below
 
-void transducer__initFileLog(FILE *filePointer, const char *fileName);
+void transducer__initFileLog(Transducer *self, int indexLogFile, const char *fileName);
 
 void transducer__readFromSocket();
 
-void transducer__speedLog(FILE *filePointer, char *fileName, double PFCSpeed);
+void transducer__speedLog(Transducer *self, int indexLogFile, char *fileName, double PFCSpeed);
 
-void Transducer__init(Transducer *self, PFC *PFC_list[3]) {
-    // set reference for all running PFCs
-    self->PFC_list[0] = &PFC_list[0];
-    self->PFC_list[1] = &PFC_list[1];
-    self->PFC_list[2] = &PFC_list[2];
-
+void Transducer__init(Transducer *self) {
     // set headers of logfiles
-    transducer__initFileLog(self->log_files[0], TRANSDUCERS_LOGFILE1);
+    transducer__initFileLog(self, 0, TRANSDUCERS_LOGFILE1);
 
-    transducer__initFileLog(self->log_files[1], TRANSDUCERS_LOGFILE2);
+    transducer__initFileLog(self, 1, TRANSDUCERS_LOGFILE2);
 
-    transducer__initFileLog(self->log_files[2], TRANSDUCERS_LOGFILE3);
+    transducer__initFileLog(self, 2, TRANSDUCERS_LOGFILE3);
 }
 
 
@@ -29,13 +24,15 @@ void transducer__readFromChannel(Transducer *self, int channel, int channelType,
     sleep(2); //sync
     static double res;
     do {
+        sleep(1);
         if (channelType == SOCKCH || channelType == PIPECH) {
             read(channel, &res, sizeof(double));
             if (res < 0) {
                 fprintf(stderr, "[ERR][Transducer]\tError while reading data'%s'\n",
                         Channel__extendedName(channelType));
+                fflush(stderr);
             } else {
-                transducer__speedLog(self->log_files[indexLogfile],
+                transducer__speedLog(self, indexLogfile,
                                      fileName,
                                      res);
             }
@@ -74,11 +71,14 @@ void transducer__readFromFile(Transducer *self) {
         lock.l_type = F_RDLCK; /* prevents any writing during the reading */
         if (fcntl(self->communicationChannel.channel, F_SETLK, &lock) < 0)
             perror("[ERR][Transducer]\tCan't get a read-only lock ");
-        while (read(self->communicationChannel.channel, &res, sizeof(double)) > 0) { /* 0 signals EOF */
-            transducer__speedLog(self->log_files[2],
-                                 TRANSDUCERS_LOGFILE3,
-                                 res);
-        }
+
+        fsync(self->communicationChannel.channel);
+        read(self->communicationChannel.channel, &res, sizeof(double)); /* 0 signals EOF */
+        fflush(stdout);
+        transducer__speedLog(self, 2,
+                             TRANSDUCERS_LOGFILE3,
+                             res);
+
         lock.l_type = F_UNLCK;
         if (fcntl(self->communicationChannel.channel, F_SETLK, &lock) < 0)
             perror("[ERR][Transducer]\tExplicit unlocking failed ");
@@ -92,10 +92,10 @@ Transducer *Transducer__create() {
 
 
 /*:: Utilities :*/
-void transducer__initFileLog(FILE *filePointer, const char *fileName) {
+void transducer__initFileLog(Transducer *self, int indexLogFile, const char *fileName) {
     unlink(fileName);
-    filePointer = fopen(fileName, "w");
-    fclose(filePointer);
+    self->log_files[indexLogFile] = fopen(fileName, "w");
+    fclose(self->log_files[indexLogFile]);
 }
 
 void Transducer__setCommunicationChannel(Transducer *self, int channel, int channelType) {
@@ -109,10 +109,11 @@ void Transducer__setCommunicationChannel(Transducer *self, int channel, int chan
         transducer__readFromFile(self);
 }
 
-void transducer__speedLog(FILE *filePointer, char *fileName, double PFCSpeed) {
-    filePointer = fopen(fileName, "a");
-    fprintf(filePointer, "%f\n", PFCSpeed + 1 - 1);
-    fclose(filePointer);
+void transducer__speedLog(Transducer *self, int indexLogFile, char *fileName, double PFCSpeed) {
+    self->log_files[indexLogFile] = fopen(fileName, "a");
+    fprintf(self->log_files[indexLogFile], "%f\n", PFCSpeed);
+    fflush(self->log_files[indexLogFile]);
+    fclose(self->log_files[indexLogFile]);
 }
 
 
