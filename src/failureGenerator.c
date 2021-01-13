@@ -7,42 +7,46 @@
 /**
 *  Calculate a random number between zero and maxLimit
 *  after that check if the calculated number is equal to alpha
+*  @param maxLimit max limit, should expect 10^n
+*  @param alpha comparison number
+*  @return a boolean value
 */
-bool isProbability(int maxLimit,    /**< max limit, should expect 10^n  */
-                   short alpha)     /**< comparison number  */
-                   ;
+bool isProbability(int maxLimit, short alpha);
 
 /**
 *  Check if a signal needs to be sent to process
 *  in case of send signal with kill() and return true
 *  false otherwise
+*  @param signum refers to integer value of Signal Number (man signal for more)
+*  @param destinationProcess pid of process who will receive a signal
+*  @return (bool) true is signal was sent to destinationProcess
 */
-bool isSignalSentTo(int signum,int probability, pid_t destinationProcess);
+bool isSignalSentTo(int signum, int probability, pid_t destinationProcess);
 
 /**
 *  Log a signal number into self.log_file
+*  @param self : reference to self "object" in memory
+*  @param pfc : reference to PFC who has received signal
+*  @param signum : integer number, it's the signal number
 */
-void logEvent(FailureGen *self,/**< reference to self "object" in memory  */
-              PFC *pfc,        /**< reference to PFC who has received signal  */
-              int signum       /**< integer number, it's the signal number  */
-              );
+void logEvent(FailureGen *self, PFC *pfc, int signum);
 
 /**
 *  Initialize log files
 *  Create file if doesn't exist or open it in "append" mode
 *  Also create a file-header
+*  @param self : reference to self "object" in memory
 */
-void failureGenerator_initFileLog(FailureGen *self /**< reference to self "object" in memory  */
-);
+void failureGenerator_initFileLog(FailureGen *self);
 
 /**
 *  Provides a correct probability for every signal number
 *  This function wraps all signal workflow
+*  @param self : reference to self "object" in memory
+*  @param signum : int number, a signal number
+*  @param destinationProcess : reference to PFC "object" in memory
 */
-void sendAndLog(FailureGen *self,       /**< reference to self "object" in memory  */
-                int signum,             /**< int number, a signal number */
-                PFC *destinationProcess /**< reference to PFC "object" in memory */
-                );
+void sendAndLog(FailureGen *self, int signum, PFC *destinationProcess);
 
 /**
 *  This function pick a random signal from self references
@@ -50,9 +54,10 @@ void sendAndLog(FailureGen *self,       /**< reference to self "object" in memor
 *
 *  (works once per second)
 *  (this function _Noreturn anything)
+ *
+*  @param self reference to self "object" in memory
 */
-_Noreturn void choosePFCandSignal(FailureGen *self /**< reference to self "object" in memory  */
-) {
+_Noreturn void choosePFCandSignal(FailureGen *self) {
     while (1) {
         sleep(1);
         int pickIndex;
@@ -114,7 +119,7 @@ void logEvent(FailureGen *self, PFC *pfc, int signum) {
             extendedNameOfSignal = "SIGUSR1";
             break;
     }
-    fprintf(self->log_file, "%d\t%s\t%d [%s]\n", pfc->selfPid, pfc->name, signum,extendedNameOfSignal);
+    fprintf(self->log_file, "%d\t%s\t%d [%s]\n", pfc->selfPid, pfc->name, signum, extendedNameOfSignal);
     fclose(self->log_file);
 }
 

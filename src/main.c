@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
             sleep(3);
 
             Wes *wes = Wes__create();
-            Wes_setPFCDisconnectSwitch(wes,pds);
+            Wes__setPFCDisconnectSwitch(wes,pds);
             free(wes);
             exit(0);
         }

@@ -39,12 +39,69 @@ typedef struct PFC {
 } PFC;
 
 
+/**
+ * Creates enough space in memory to allow this struct allocation
+ * @param filename name of file used to reads GPGLL data
+ * @param name a formal name for pfc,also used for logging as metadata
+ * @return a pointer reference to space of memory where is stored a PFC struct
+ */
 PFC *PFC__create(char *filename, char *name);
+
+/**
+ *  Reads each line of file pointed by PFC.filePointer
+ *  and if row starts with GPGLL then calculate distance and speed
+ *  and send this values to Transducers through PFC.com
+ *  also backup position of self.filePointer
+ * @param self reference to self "object" in memory
+ */
 void PFC_read(PFC *self);
+
+/**
+ *  Closes PFC.filePointer, reset PFC and deallote memory in ram
+ *  At the end stops the process sending a SIGQUIT signal
+ *  and if row starts with GPGLL then calculate distance and speed
+ *  and send this values to Transducers through PFC.com
+ *  also backup position of self.filePointer
+ * @param self reference to self "object" in memory
+ */
 void PFC__destroy(PFC *self);
+
+/**
+*  Initialize a communication between PFC and Transducers
+ * @param self reference to self "object" in memory
+ * @param channel defines channel attribute of struct Channel
+ * @param channelType what kind of channel is | see Channel.type
+ */
 void PFC__setCommunicationChannel(PFC *self, int channel, int channelType);
+
+/**
+ *  Determines if communication will be through socket, pipe or shared files
+ *  and write on it
+ *
+ *  If communication will be through file, acquires an exclusive lock
+ *  before write on it
+ * @param self reference to self "object" in memory
+ */
 void PFC_log(PFC *self);
+
+/**
+ * Reset every filePointer or last/current value stored as latitude/longitude or timestamp
+ * @param self reference to self "object" in memory
+ */
 void PFC__reset(PFC *self);
+
+/**
+ * This function implements a bare security feature
+ * Filesize is duplicated in each PFC, if anyone
+ *  modify a line during the execution of program, it stops with
+ *  exit(EXIT_FAILURE);
+ *  Check every calls if fileSize pointed by filePointer is equal to stored fileSize
+ * at first run, sets fileSize by move filePointer to EOF and use ftell() to know
+ * seekPosition of filePointer
+ *
+ * @attention detect if a single char is removed, but not if it is changed
+ * @param self reference to self "object" in memory
+ */
 void PFC__checkFilesize(PFC *self);
 
 #endif

@@ -36,11 +36,21 @@
 #define WES_ERROR 2
 #define WES_EMERGENCY 1
 
+/**
+ *  PFCDisconnectSwitch reveices by Wes a message
+ *  if message is an WES_EMERGENCY type then, kill entire app
+ *  else if message is WES_ERROR type, then check and log status of process
+*/
 typedef struct {
-    PFC **PFC_list[3];
-    FILE *logFile;
+    PFC **PFC_list[3];/**< references to three PFC, useful to implement an easier workflow.
+                         * Sending signals or reading metadata of PFC*/
+    FILE *logFile; /**< reference to FILE, used for logging */
 } PFCDisconnectSwitch;
 
+/**
+ * Creates enough space in memory to allow this struct allocation
+ * @return a pointer reference to space of memory where is stored a PFCDisconnectSwitch struct
+ */
 PFCDisconnectSwitch *PDS__create(PFC *PFC_list[3]);
 void pds__handleMessage(PFCDisconnectSwitch *self,int typeOfMessage, int extraInfo);
 

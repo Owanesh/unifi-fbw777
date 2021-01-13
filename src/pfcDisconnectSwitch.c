@@ -4,8 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-
+/**
+ * By a provided pid, this function runs a `ps` command on shell and parse results
+ * @param pid Process identificator
+ * @param char A state of process, more info on `man ps`
+*/
 char checkStatusOf(pid_t pid) {
+    /* why execute a ps command instead of read from /proc ?
+     * /proc/$pid file isn't valid in BSD systems like MacOS
+     */
     int link[2];
     pid_t execPid;
     char statusCode[5 + 1];

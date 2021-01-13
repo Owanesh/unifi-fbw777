@@ -14,12 +14,12 @@
 
 /**
 *  South latitudes are negative, east longitudes are positive
+ *  @param lat1 Latitude of point 1 (in decimal degrees)
+ *  @param lat2 Latitude of point 2 (in decimal degrees)
+ *  @param lon1 Longitude of point 1 (in decimal degrees)
+ *  @param lon2 Longitude of point 2 (in decimal degrees)
 */
-double distanceBetweenPoints(double lat1,   /**< Latitude of point 1 (in decimal degrees) */
-                             double lon1,   /**< Longitude of point 1 (in decimal degrees) */
-                             double lat2,   /**< Latitude of point 2 (in decimal degrees) */
-                             double lon2    /**< Longitude of point 2 (in decimal degrees) */
-) {
+double distanceBetweenPoints(double lat1, double lon1, double lat2, double lon2) {
     double earthRadius_km = EARTH_RADIUS * 1e3;
     double diffLat, diffLon, radLat1, radLat2, alpha, bravo, charlie;
     diffLat = deg2rad(lat2 - lat1);
@@ -34,6 +34,8 @@ double distanceBetweenPoints(double lat1,   /**< Latitude of point 1 (in decimal
 
 /**
 *  This function converts decimal degrees to radians
+ *  @param deg Degrees value in Double type
+ *  @return Radiant value in Double type
 */
 double deg2rad(double deg) {
     return (deg * pi / 180);
@@ -41,74 +43,31 @@ double deg2rad(double deg) {
 
 /**
 *  This function converts radians to decimal degrees
+ *  @param rad Radiant value in Double type
+ *  @return Degrees value in Double type
 */
 __unused double rad2deg(double rad) {
     return (rad * 180 / pi);
 }
 
 /**
-*  This function converts a string into double number
+*  Converts a string (char *) to an double value
+ *  @param str string that represent an double value
+ *  @return Double value
+ *  @attention if string contains characters this function doesn't work
 */
-double str2double(char *string) {
+double str2double(char *str) {
     char *rest;
     double ret;
-    ret = strtod(string, &rest);
+    ret = strtod(str, &rest);
     return ret;
 }
 
 /**
-*  Calculate speed between two points with timestamp and distance
-*/
-double speedBetweenPoints(int timestamp1,   /**< Timestamp at point 1 */
-                          int timestamp2,   /**< Timestamp at point 2 */
-                          double distance   /**< calculated distance between points */
-) {
-    return timestamp2 > timestamp1 ? (distance / (timestamp2 - timestamp1)) : 0;
-}
-
-/**
-*  Check if a file exist
-*/
-bool fileExists(const char *filename) {
-    FILE *file;
-    if ((file = fopen(filename, "r"))) {
-        fclose(file);
-        return true;
-    }
-    return false;
-}
-
-/***
-*  Check if substring is contained into a string
-*/
-bool strContains(const char *search, /**< substring to find */
-                 const char *content /**< string who maybe contains "search" arg */
-) {
-    char *found;
-    if (!search || !content) return -1;
-    found = strstr(content, search);
-    return found ? true : false;
-}
-
-/**
-*  Check how many char (token) are contained into string
-*/
-int strTokenCount(const char *buffer,   /**< string who maybe contains "token" char */
-                  const char token      /**< character to looking for */
-) {
-    int count = 0;
-    size_t i = 0;
-    while (buffer[i] != '\0') {
-        if (buffer[i] == token) {
-            count++;
-        }
-        i++;
-    }
-    return count;
-}
-
-/**
 *  Converts a string (char *) to an integer value
+ *  @param str string that represent an integer value
+ *  @return Integer value
+ *  @attention if string contains characters this function doesn't work
 */
 __unused int str2i(const char *str) {
     int num = 0;
@@ -127,12 +86,65 @@ __unused int str2i(const char *str) {
 }
 
 /**
-*  Split a string divided by separator. this fill an array
+*  Calculate speed between two points with timestamp and distance
+ *  @param timestamp1 Timestamp at point 1
+ *  @param timestamp2 Timestamp at point 2
+ *  @param distance calculated distance between points
 */
-void strSplit(char *buffer,             /**< string that will be splitted */
-              const char *separator,    /**< delimiter of each substring */
-              char **array              /**< will contains substrings  */
-) {
+double speedBetweenPoints(int timestamp1, int timestamp2, double distance) {
+    return timestamp2 > timestamp1 ? (distance / (timestamp2 - timestamp1)) : 0;
+}
+
+/**
+*  Check if a file exists
+ *  @param filename Name of file
+*/
+bool fileExists(const char *filename) {
+    FILE *file;
+    if ((file = fopen(filename, "r"))) {
+        fclose(file);
+        return true;
+    }
+    return false;
+}
+
+/***
+*  Check if substring is contained into a string
+ *  @param content string who maybe contains "search" arg
+ *  @param search substring to find
+*/
+bool strContains(const char *search, const char *content) {
+    char *found;
+    if (!search || !content) return -1;
+    found = strstr(content, search);
+    return found ? true : false;
+}
+
+/**
+*  Check how many char (token) are contained into string
+ *  @param buffer string who maybe contains "token" char
+ *  @param token character to looking for
+*/
+int strTokenCount(const char *buffer, const char token) {
+    int count = 0;
+    size_t i = 0;
+    while (buffer[i] != '\0') {
+        if (buffer[i] == token) {
+            count++;
+        }
+        i++;
+    }
+    return count;
+}
+
+
+/**
+*  Split a string divided by separator. this fill an array
+ *  @param buffer string that will be splitted
+ *  @param separator delimiter of each substring
+ *  @param array will contains substrings
+*/
+void strSplit(char *buffer, const char *separator, char **array) {
     int i = 0;
     char *p = strtok(buffer, separator);
     while (p != NULL) {
@@ -202,11 +214,12 @@ char *checkFileIntoMainArgs(int argc, char *argv[]) {
 
 /**
 *  Get index of position element in array   (recursive-chain)
+ *  @param PFC_pid element to find
+ *  @param PFC_list array of elements
+ *  @param position position, needs to be 0 at calling
+ *  @return Position of provided PFC_Pid into PFC_List
 */
-int getIndexOfPFCList(pid_t PFC_pid,   /**< element to find */
-                      pid_t *PFC_list, /**< array of elements */
-                      int position     /**< position, needs to be 0 at calling */
-) {
+int getIndexOfPFCList(pid_t PFC_pid, pid_t *PFC_list, int position) {
     if (PFC_pid == 0)
         return -1;
     else if (PFC_pid == PFC_list[position])
@@ -217,8 +230,9 @@ int getIndexOfPFCList(pid_t PFC_pid,   /**< element to find */
 
 /**
 *  Creates and returns a named-provided socket
+ *  @param filename name of namedSocket
 */
-__unused int make_named_socket(const char *filename /**< name of namedSocket */) {
+__unused int make_named_socket(const char *filename) {
     unlink(filename);
     struct sockaddr_un sockFile;
     int sock;
@@ -260,6 +274,7 @@ char *Channel__extendedName(int channelType /**< a Channel type value, referred 
  *
  *  To compare them, will subtract each other and compare the result
  *  with and entropy that determines what is the "level" of equity
+ *  @return true if numbers are equal over a defined entropy (0.000001)
 */
 bool fequal(double a, double b) {
     return fabs(a - b) < 0.000001;

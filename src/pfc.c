@@ -6,18 +6,25 @@
 
 int shifter;
 
-// TODO : {DOCS} write some documentation for each function below
-
+/**
+ * Creates enough space in memory to allow this struct allocation
+ * @param self reference to self "object" in memory
+ * @param filename name of file used to reads GPGLL data
+ * @param name a formal name for pfc,also used for logging as metadata
+ */
 void PFC__init(PFC *self, char *filename, char *name);
 
-void PFC__reset(PFC *self);
 
+/**
+ * Implements a backup system of filePointer. Stores seekPoint into internal attribute of PFC
+ * @param self reference to self "object" in memory
+ */
 void PFC__backupFPointer(PFC *self);
 
-/* **
+/**
 * UpdatePosition allows to update arrays referred to PFCs GPGLL
 *
-* Return: bool -> necessity to update PFCParameters
+* @return  a boolean value represents necessity to update PFCParameters
 */
 bool updatePosition(PFC *self, double latitude, double longitude, long timestamp) {
     if (self->latitudes[0] == PFC_RESETVAL || self->longitudes[0] == PFC_RESETVAL) { // Maybe it's the first time
@@ -43,6 +50,9 @@ bool updatePosition(PFC *self, double latitude, double longitude, long timestamp
 
 /**
 *  Set speed and distance into PFCParameter of self pointer
+ * @param self reference to self "object" in memory
+ * @param speed double value indicates a cruise speed | see PFCParameters
+ * @param distance double value indcates a traveled distance | see PFCParameters
 */
 void PFCParameter__update(PFC *self, double speed, double distance) {
     if (shifter == self->selfPid) {
@@ -55,6 +65,8 @@ void PFCParameter__update(PFC *self, double speed, double distance) {
 
 /**
 *  Convert a GPGLL line into parameters for PFC reference pointer
+ * @param line row of file that contains the data
+ * @param self reference to self "object" in memory
 */
 void gpgll2PFCParameters(char *line, PFC *self) {
     int tokenFound = strTokenCount(line, EMEA_SEP[0]);
@@ -75,11 +87,7 @@ void gpgll2PFCParameters(char *line, PFC *self) {
     }
 }
 
-/***
-*  Security check. Filesize is duplicated in each PFC, if anyone
-*  modify a line during the execution of program, it stops with
-*  exit(EXIT_FAILURE);
-*/
+
 void PFC__checkFilesize(PFC *self) {
     long prev = ftell(self->filePointer);
     fseek(self->filePointer, 0, SEEK_END); // seek to end of file
@@ -145,8 +153,8 @@ void PFC__destroy(PFC *self) {
         fclose(self->filePointer);
         printf("Destroying %s PFC who has pid %d \n", self->name, self->selfPid);
         PFC__reset(self);
-        kill(SIGQUIT, self->selfPid);
         free(self);
+        kill(self->selfPid,SIGQUIT);
     }
     exit(0);
 }
@@ -211,5 +219,6 @@ void PFC_log(PFC *self) {
 void PFC__setCommunicationChannel(PFC *self, int channel, int channelType) {
     self->com.channel = channel;
     self->com.type = channelType;
+    self->com.meta = Channel__extendedName(channelType);
 }
 

@@ -4,32 +4,43 @@
 #include "util/headers/utilities.h"
 #include "util/headers/constant.h"
 
-/*******************************:*/
-/**  Messages used for logging                :*/
-/*******************************:*/
+
+/** First PFC has provided a different values from second and third PFC*/
 #define WES_MSG_ERRPFC1   "Error at PFC #1 | has a different value"
+/** Second PFC has provided a different values from first and third PFC*/
 #define WES_MSG_ERRPFC2   "Error at PFC #2 | has a different value"
+/** Third PFC has provided a different values from second and first PFC*/
 #define WES_MSG_ERRPFC3   "Error at PFC #3 | has a different value"
+/** All of three PFC has different values*/
 #define WES_MSG_EMERGENCY "Emergency alert | WES obtained three different values"
 
-/*******************************:*/
-/**  Initialize every filePointer into Wes    :*/
-/*******************************:*/
+/**
+*  Initialize all Wes.fileNames and every Wes.fileData
+ * @param self reference to self "object" in memory
+ */
+void Wes__init(Wes *self);
+
+/**
+*  Initialize a filePointer in READ mode on provided FileName ad stores it into fileData attribute of Wes
+ * @param self  reference to self "object" in memory
+ * @param index  of array of fileData
+ * @param fileName  Filename of file that will be opened
+ */
 void Wes__openFile(Wes *self, int index, char *fileName);
 
 _Noreturn void Wes__startReading(Wes *self);
 
 void Wes__compareAndLog(Wes *self, double xray, double yankee, double zulu);
 
-/* *********************************************/
-/** LogAction allows to save every stdout output into file        :*/
-/**     Wes *self : Reference to Wes object                        :*/
-/**     char *action : a message that will be stored into file     :*/
-/* *********************************************/
+/**
+* LogAction allows to save every stdout output into file
+*  @param self Reference to Wes object
+*  @param action a message that will be stored into file
+*/
 void Wes__logAction(Wes *self, char *action);
 
+
 void Wes__init(Wes *self) {
-    fflush(stdout);
     char *fileNames[3] = {TRANSDUCERS_LOGFILE1, TRANSDUCERS_LOGFILE2, TRANSDUCERS_LOGFILE3};
     for (int index = 0; index < 3; index++) {
         Wes__openFile(self, index, fileNames[index]);
@@ -44,7 +55,7 @@ Wes *Wes__create() {
     return wes;
 }
 
-void Wes_setPFCDisconnectSwitch(Wes *self, PFCDisconnectSwitch *pds) {
+void Wes__setPFCDisconnectSwitch(Wes *self, PFCDisconnectSwitch *pds) {
     self->pds = pds;
     Wes__init(self);
 }

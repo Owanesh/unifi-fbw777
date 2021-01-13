@@ -16,7 +16,12 @@ typedef struct {
     PFCDisconnectSwitch *pds;   /**< pointer to PFCDisconnectSwitch */
 } Wes;
 
-void Wes_setPFCDisconnectSwitch(Wes *self, PFCDisconnectSwitch *pds);
+/**
+*  Initialize a communication between Wes and PFC Diconnect switch
+ * @param self reference to self "object" in memory
+ * @param pds pointer to PFC Disconnect Switch
+ */
+void Wes__setPFCDisconnectSwitch(Wes *self, PFCDisconnectSwitch *pds);
 
 Wes *Wes__create();
 

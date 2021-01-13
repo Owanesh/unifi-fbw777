@@ -14,8 +14,8 @@
 #define SIGUSR1_PROBABILITY 1e2
 
 /**
- *  A structure that defines and organize a Failure Generator process
- *  every second, pick a random PFC and send a signal choosed by self.signals
+ *  Failure Generator process every second, pick a random PFC and
+ *  send a signal choosed by self.signals
  *  Notice: Each signal has it own probability to be chose
 */
 typedef struct {
@@ -26,6 +26,15 @@ typedef struct {
     int signals[4];     /**< list of signals. */
 } FailureGen;
 
+/**
+ * Creates enough space in memory to allow this struct allocation
+ * @param self reference to self "object" in memory
+ * @param PFC_list an array of three pointers, each one refers to PFC
+ */
 void FailureGen__init(FailureGen *self,  PFC *PFC_list[3]);
+/**
+ * Creates enough space in memory to allow this struct allocation
+ * @return a pointer reference to space of memory where is stored a FailureGen struct
+ */
 FailureGen * FailureGen__create();
 #endif
