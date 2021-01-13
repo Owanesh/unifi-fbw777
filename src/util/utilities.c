@@ -4,22 +4,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-/*:: IPC :*/
 #include <sys/socket.h>
 #include <sys/un.h>
-
-/*:: Custom resources:*/
 #include "headers/utilities.h"
 #include "headers/constant.h"
 
+/** Pi Greco approx */
 #define pi 3.14159265358979323846
 
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  South latitudes are negative, east longitudes are positive           :*/
-/*::    lat1, lon1 = Latitude and Longitude of point 1 (in decimal degrees)  :*/
-/*::    lat2, lon2 = Latitude and Longitude of point 2 (in decimal degrees)  :*/
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-double distanceBetweenPoints(double lat1, double lon1, double lat2, double lon2) {
+/**
+*  South latitudes are negative, east longitudes are positive
+*/
+double distanceBetweenPoints(double lat1,   /**< Latitude of point 1 (in decimal degrees) */
+                             double lon1,   /**< Longitude of point 1 (in decimal degrees) */
+                             double lat2,   /**< Latitude of point 2 (in decimal degrees) */
+                             double lon2    /**< Longitude of point 2 (in decimal degrees) */
+) {
     double earthRadius_km = EARTH_RADIUS * 1e3;
     double diffLat, diffLon, radLat1, radLat2, alpha, bravo, charlie;
     diffLat = deg2rad(lat2 - lat1);
@@ -32,23 +32,23 @@ double distanceBetweenPoints(double lat1, double lon1, double lat2, double lon2)
     return charlie;
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  This function converts decimal degrees to radians             :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/**
+*  This function converts decimal degrees to radians
+*/
 double deg2rad(double deg) {
     return (deg * pi / 180);
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  This function converts radians to decimal degrees             :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/**
+*  This function converts radians to decimal degrees
+*/
 __unused double rad2deg(double rad) {
     return (rad * 180 / pi);
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  This function converts a string into double number            :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/**
+*  This function converts a string into double number
+*/
 double str2double(char *string) {
     char *rest;
     double ret;
@@ -56,19 +56,19 @@ double str2double(char *string) {
     return ret;
 }
 
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Calculate speed between two points with timestamp and distance         :*/
-/*::      timestamp1 = Timestamp at point 1                                  :*/
-/*::      timestamp2 = Timestamp at point 2                                  :*/
-/*::      distance = calculated distance between points                      :*/
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-double speedBetweenPoints(int timestamp1, int timestamp2, double distance) {
+/**
+*  Calculate speed between two points with timestamp and distance
+*/
+double speedBetweenPoints(int timestamp1,   /**< Timestamp at point 1 */
+                          int timestamp2,   /**< Timestamp at point 2 */
+                          double distance   /**< calculated distance between points */
+) {
     return timestamp2 > timestamp1 ? (distance / (timestamp2 - timestamp1)) : 0;
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Check if a file exist                                         :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/**
+*  Check if a file exist
+*/
 bool fileExists(const char *filename) {
     FILE *file;
     if ((file = fopen(filename, "r"))) {
@@ -78,24 +78,24 @@ bool fileExists(const char *filename) {
     return false;
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Check if substring is contained into a string                 :*/
-/*::      search: substring to find                                 :*/
-/*::      content: string who maybe contains "search" arg           :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-bool strContains(const char *search, const char *content) {
+/***
+*  Check if substring is contained into a string
+*/
+bool strContains(const char *search, /**< substring to find */
+                 const char *content /**< string who maybe contains "search" arg */
+) {
     char *found;
     if (!search || !content) return -1;
     found = strstr(content, search);
     return found ? true : false;
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Check how many char (token) are contained into string         :*/
-/*::      token: character to looking for                           :*/
-/*::      buffer: string who maybe contains "token" char            :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-int strTokenCount(const char *buffer, const char token) {
+/**
+*  Check how many char (token) are contained into string
+*/
+int strTokenCount(const char *buffer,   /**< string who maybe contains "token" char */
+                  const char token      /**< character to looking for */
+) {
     int count = 0;
     size_t i = 0;
     while (buffer[i] != '\0') {
@@ -107,6 +107,9 @@ int strTokenCount(const char *buffer, const char token) {
     return count;
 }
 
+/**
+*  Converts a string (char *) to an integer value
+*/
 __unused int str2i(const char *str) {
     int num = 0;
     int i = 0;
@@ -123,14 +126,13 @@ __unused int str2i(const char *str) {
     return num;
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Split a string divided by separator. this fill an array :*/
-/*::      buffer: string that will be splitted                :*/
-/*::      separator: delimiter of each substring              :*/
-/*::      array : will contains substrings                    :*/
-/*::      returns : an array with substring in each element   :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-void strSplit(char *buffer, const char *separator, char **array) {
+/**
+*  Split a string divided by separator. this fill an array
+*/
+void strSplit(char *buffer,             /**< string that will be splitted */
+              const char *separator,    /**< delimiter of each substring */
+              char **array              /**< will contains substrings  */
+) {
     int i = 0;
     char *p = strtok(buffer, separator);
     while (p != NULL) {
@@ -140,13 +142,13 @@ void strSplit(char *buffer, const char *separator, char **array) {
     }
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Calculate random integer between two limits         :*/
-/*::      min_num: min number allowed for a random value  :*/
-/*::      max_num: max number allowed for a random value  :*/
-/*::      returns : min < (number) < max                  :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-int random_number(int min_num, int max_num) {
+/**
+*  Calculate random integer between two limits
+*      returns : min < (number) < max
+*/
+int random_number(int min_num,/**< min number allowed for a random value */
+                  int max_num /**< max number allowed for a random value */
+) {
     int result, low_num, hi_num;
     if (min_num < max_num) {
         low_num = min_num;
@@ -161,9 +163,9 @@ int random_number(int min_num, int max_num) {
     return result;
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  This function prints only an header for this program          :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/**
+*  This function prints only an header for this program
+*/
 void welcomeMessage() {
     printf("\033[0;35m");
     printf("\n"
@@ -176,12 +178,12 @@ void welcomeMessage() {
     printf("\033[0m");
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Gets filename by argv array passed to application             :*/
-/*::   ./aeroplanetty <filepath_g18.tx>                             :*/
-/*::      if filepath is invalid or file does not exist, will use   :*/
-/*::      internal file stored in /resources/G18.txt                :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/**
+*  Gets filename by argv array passed to application
+*   ./aeroplanetty <filepath_g18.tx>
+*      if filepath is invalid or file does not exist, will use
+*      internal file stored in /resources/G18.txt
+*/
 char *checkFileIntoMainArgs(int argc, char *argv[]) {
     if (argc == 2) {
         printf("The argument supplied is %s\n", argv[1]);
@@ -198,13 +200,13 @@ char *checkFileIntoMainArgs(int argc, char *argv[]) {
     return "../resources/G18.txt";
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Get index of position element in array   (recursive):*/
-/*::      PFC_pid: element to find                        :*/
-/*::      PFC_list: array of elements                     :*/
-/*::      position : position, needs to be 0 at calling.  :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-int getIndexOfPFCList(pid_t PFC_pid, pid_t *PFC_list, int position) {
+/**
+*  Get index of position element in array   (recursive-chain)
+*/
+int getIndexOfPFCList(pid_t PFC_pid,   /**< element to find */
+                      pid_t *PFC_list, /**< array of elements */
+                      int position     /**< position, needs to be 0 at calling */
+) {
     if (PFC_pid == 0)
         return -1;
     else if (PFC_pid == PFC_list[position])
@@ -213,8 +215,10 @@ int getIndexOfPFCList(pid_t PFC_pid, pid_t *PFC_list, int position) {
         return getIndexOfPFCList(PFC_pid, PFC_list, ++position);
 }
 
-
-__unused int make_named_socket(const char *filename) {
+/**
+*  Creates and returns a named-provided socket
+*/
+__unused int make_named_socket(const char *filename /**< name of namedSocket */) {
     unlink(filename);
     struct sockaddr_un sockFile;
     int sock;
@@ -232,13 +236,13 @@ __unused int make_named_socket(const char *filename) {
     return sock;
 }
 
-/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*:: Provides an extended name for Channel.type that is an enum :*/
-/*::     SOCKCH : Socket                                        :*/
-/*::     PIPECH : Pipe                                          :*/
-/*::     FILECH : File                                          :*/
-/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-char *Channel__extendedName(int channelType) {
+/**
+* Provides an extended name for Channel.type that is an enum
+*     SOCKCH : Socket
+*     PIPECH : Pipe
+*     FILECH : File
+*/
+char *Channel__extendedName(int channelType /**< a Channel type value, referred to its enum type*/) {
     switch (channelType) {
         default:
             return "Undefined";
@@ -251,12 +255,12 @@ char *Channel__extendedName(int channelType) {
     }
 }
 
-/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*:: fequal compares two doubles number                               :*/
-/*::     double a, b: double number that will be compared             :*/
-/*::  To compare them, will subtract each other and compare the result:*/
-/*::  with and entropy that determines what is the "level" of equity  :*/
-/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/**
+ * fequal compares two doubles number
+ *
+ *  To compare them, will subtract each other and compare the result
+ *  with and entropy that determines what is the "level" of equity
+*/
 bool fequal(double a, double b) {
     return fabs(a - b) < 0.000001;
 }

@@ -14,14 +14,11 @@ void PFC__reset(PFC *self);
 
 void PFC__backupFPointer(PFC *self);
 
-/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*:: UpdatePosition allows to update arrays referred to PFCs GPGLL  :*/
-/*::     PFC *self : Reference to PFC object                        :*/
-/*::     Other parameters according to GPGLL:                       :*/
-/*::        double latitude, longitude                              :*/
-/*::        int timestamp                                           :*/
-/*::     Return: bool -> necessity to update PFCParameters          :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/* **
+* UpdatePosition allows to update arrays referred to PFCs GPGLL
+*
+* Return: bool -> necessity to update PFCParameters
+*/
 bool updatePosition(PFC *self, double latitude, double longitude, long timestamp) {
     if (self->latitudes[0] == PFC_RESETVAL || self->longitudes[0] == PFC_RESETVAL) { // Maybe it's the first time
         self->latitudes[0] = latitude;
@@ -44,9 +41,9 @@ bool updatePosition(PFC *self, double latitude, double longitude, long timestamp
     return false;
 }
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Set speed and distance into PFCParameter of self pointer      :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/**
+*  Set speed and distance into PFCParameter of self pointer
+*/
 void PFCParameter__update(PFC *self, double speed, double distance) {
     if (shifter == self->selfPid) {
         speed = ((int) speed << 2);
@@ -56,9 +53,9 @@ void PFCParameter__update(PFC *self, double speed, double distance) {
     self->param.distance = distance > +0 ? distance : 0;
 }
 
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Convert a GPGLL line into parameters for PFC reference pointer :*/
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/**
+*  Convert a GPGLL line into parameters for PFC reference pointer
+*/
 void gpgll2PFCParameters(char *line, PFC *self) {
     int tokenFound = strTokenCount(line, EMEA_SEP[0]);
     char **splittedLineBuffer[tokenFound];
@@ -78,11 +75,11 @@ void gpgll2PFCParameters(char *line, PFC *self) {
     }
 }
 
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Security check. Filesize is duplicated in each PFC, if anyone  :*/
-/*::  modify a line during the execution of program, it stops with   :*/
-/*::  exit(EXIT_FAILURE);                                            :*/
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/***
+*  Security check. Filesize is duplicated in each PFC, if anyone
+*  modify a line during the execution of program, it stops with
+*  exit(EXIT_FAILURE);
+*/
 void PFC__checkFilesize(PFC *self) {
     long prev = ftell(self->filePointer);
     fseek(self->filePointer, 0, SEEK_END); // seek to end of file

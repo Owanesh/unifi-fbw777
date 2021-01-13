@@ -5,30 +5,25 @@
 
 #include "pfc.h"
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Definition of every signal's probability          :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/**
+ *  Definition of every signal's probability
+ */
 #define SIGSTOP_PROBABILITY 1e2
 #define SIGINT_PROBABILITY 1e4
 #define SIGCONT_PROBABILITY 1e1
 #define SIGUSR1_PROBABILITY 1e2
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  FailureGen struct                                 :*/
-/*::    log_file : reference to FILE, used for logging  :*/
-/*::    selfPid : a copy of pid of process who runs this:*/
-/*::                code                                :*/
-/*::    PFC_list : references to three PFC, useful to   :*/
-/*::                implement an easier workflow.       :*/
-/*::                Sending signals or reading          :*/
-/*::                metadata of PFC                     :*/
-/*::    signals : list of signals.                      :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/**
+ *  A structure that defines and organize a Failure Generator process
+ *  every second, pick a random PFC and send a signal choosed by self.signals
+ *  Notice: Each signal has it own probability to be chose
+*/
 typedef struct {
-    FILE *log_file;
-    pid_t selfPid;
-    PFC **PFC_list[3];
-    int signals[4];
+    FILE *log_file;     /**< reference to FILE, used for logging */
+    pid_t selfPid;      /**< a copy of pid of process who runs this code */
+    PFC **PFC_list[3];  /**< references to three PFC, useful to implement an easier workflow.
+                             * Sending signals or reading metadata of PFC*/
+    int signals[4];     /**< list of signals. */
 } FailureGen;
 
 void FailureGen__init(FailureGen *self,  PFC *PFC_list[3]);

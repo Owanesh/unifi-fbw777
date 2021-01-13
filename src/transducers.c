@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-// TODO : {DOCS} write some documentation for each function below
 
 void transducer__initFileLog(Transducer *self, int indexLogFile, const char *fileName);
 
@@ -91,7 +90,7 @@ Transducer *Transducer__create() {
 }
 
 
-/*:: Utilities :*/
+/** Utilities :*/
 void transducer__initFileLog(Transducer *self, int indexLogFile, const char *fileName) {
     unlink(fileName);
     self->log_files[indexLogFile] = fopen(fileName, "w");

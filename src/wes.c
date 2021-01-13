@@ -4,28 +4,28 @@
 #include "util/headers/utilities.h"
 #include "util/headers/constant.h"
 
-/*::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Messages used for logging                :*/
-/*::::::::::::::::::::::::::::::::::::::::::::::*/
+/*******************************:*/
+/**  Messages used for logging                :*/
+/*******************************:*/
 #define WES_MSG_ERRPFC1   "Error at PFC #1 | has a different value"
 #define WES_MSG_ERRPFC2   "Error at PFC #2 | has a different value"
 #define WES_MSG_ERRPFC3   "Error at PFC #3 | has a different value"
 #define WES_MSG_EMERGENCY "Emergency alert | WES obtained three different values"
 
-/*::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Initialize every filePointer into Wes    :*/
-/*::::::::::::::::::::::::::::::::::::::::::::::*/
+/*******************************:*/
+/**  Initialize every filePointer into Wes    :*/
+/*******************************:*/
 void Wes__openFile(Wes *self, int index, char *fileName);
 
 _Noreturn void Wes__startReading(Wes *self);
 
 void Wes__compareAndLog(Wes *self, double xray, double yankee, double zulu);
 
-/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*:: LogAction allows to save every stdout output into file        :*/
-/*::     Wes *self : Reference to Wes object                        :*/
-/*::     char *action : a message that will be stored into file     :*/
-/* ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
+/* *********************************************/
+/** LogAction allows to save every stdout output into file        :*/
+/**     Wes *self : Reference to Wes object                        :*/
+/**     char *action : a message that will be stored into file     :*/
+/* *********************************************/
 void Wes__logAction(Wes *self, char *action);
 
 void Wes__init(Wes *self) {

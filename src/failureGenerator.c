@@ -4,54 +4,55 @@
 #include "util/headers/constant.h"
 #include "headers/failureGenerator.h"
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Calculate a random number between zero and maxLimit         :*/
-/*::  after that check if the calculated number is equal to alpha :*/
-/*::    maxLimit : max limit, should expect 10^n                  :*/
-/*::    alpha : comparison number                                 :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-bool isProbability(int maxLimit, short alpha);
+/**
+*  Calculate a random number between zero and maxLimit
+*  after that check if the calculated number is equal to alpha
+*/
+bool isProbability(int maxLimit,    /**< max limit, should expect 10^n  */
+                   short alpha)     /**< comparison number  */
+                   ;
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Check if a signal needs to be sent to process      */
-/*::  in case of send signal with kill() and return true */
-/*::  false otherwise                                    */
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-bool isSignalSentTo(int signum, int probability, pid_t destinationProcess);
+/**
+*  Check if a signal needs to be sent to process
+*  in case of send signal with kill() and return true
+*  false otherwise
+*/
+bool isSignalSentTo(int signum,int probability, pid_t destinationProcess);
 
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Log a signal number into self.log_file             :*/
-/*::    self : reference to self "object" in memory      :*/
-/*::    pfc : reference to PFC who has received signal   :*/
-/*::    signum : integer number, it's the signal number  :*/
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-void logEvent(FailureGen *self, PFC *pfc, int signum);
+/**
+*  Log a signal number into self.log_file
+*/
+void logEvent(FailureGen *self,/**< reference to self "object" in memory  */
+              PFC *pfc,        /**< reference to PFC who has received signal  */
+              int signum       /**< integer number, it's the signal number  */
+              );
 
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Initialize log files                                     :*/
-/*::  Create file if doesn't exist or open it in "append" mode :*/
-/*::  Also create an header                                    :*/
-/*::    self : reference to self "object" in memory            :*/
-/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-void failureGenerator_initFileLog(FailureGen *self);
+/**
+*  Initialize log files
+*  Create file if doesn't exist or open it in "append" mode
+*  Also create a file-header
+*/
+void failureGenerator_initFileLog(FailureGen *self /**< reference to self "object" in memory  */
+);
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  Provides a correct probability for every signal number      :*/
-/*::  This function wraps all signal workflow                     :*/
-/*::    self : reference to self "object" in memory               :*/
-/*::    signum : int number, a signal number                      :*/
-/*::    destinationProcess : reference to PFC "object" in memory  :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-void sendAndLog(FailureGen *self, int signum, PFC *destinationProcess);
+/**
+*  Provides a correct probability for every signal number
+*  This function wraps all signal workflow
+*/
+void sendAndLog(FailureGen *self,       /**< reference to self "object" in memory  */
+                int signum,             /**< int number, a signal number */
+                PFC *destinationProcess /**< reference to PFC "object" in memory */
+                );
 
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/*::  This function pick a random signal from self references :*/
-/*::  and sends one for each PFC references                   :*/
-/*::    self : reference to self "object" in memory           :*/
-/*::  (works once per second)                                 :*/
-/*::  (this function _Noreturn anything)                      :*/
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-_Noreturn void choosePFCandSignal(FailureGen *self) {
+/**
+*  This function pick a random signal from self references
+*  and sends one for each PFC references
+*
+*  (works once per second)
+*  (this function _Noreturn anything)
+*/
+_Noreturn void choosePFCandSignal(FailureGen *self /**< reference to self "object" in memory  */
+) {
     while (1) {
         sleep(1);
         int pickIndex;
