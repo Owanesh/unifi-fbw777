@@ -1,5 +1,6 @@
 #include "headers/signals.h"
-int shifter;
+
+int shifter = -1;
 
 void handle_sigUSR1(int num) {
     shifter = getpid();

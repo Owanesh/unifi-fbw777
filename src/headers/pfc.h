@@ -1,7 +1,5 @@
 #ifndef UNIFI_FBW777_PFC_H
 #define UNIFI_FBW777_PFC_H
-
-
 #include "../util/headers/utilities.h"
 #include "../util/headers/constant.h"
 
@@ -13,7 +11,6 @@ typedef struct {
     double distance;    /**< traveled distance */
     double speed;       /**< cruise speed */
 } PFCParameter;
-
 
 /**
  * Primary Flight Computer (PFC)

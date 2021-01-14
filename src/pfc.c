@@ -2,9 +2,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <fcntl.h>
-
-
-int shifter;
+#include "util/headers/signals.h"
 
 /**
  * Creates enough space in memory to allow this struct allocation

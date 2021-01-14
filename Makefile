@@ -3,7 +3,15 @@ LOGDIR = .log/
 DOCDIR = docs/
 TARGET = aeroplanetty
 CC = cc
-CFLAGS = -std=c99
+CFLAGS = -std=gnu99
+LFLAGS =
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Linux)
+LFLAGS = -lm
+else
+LFLAGS = # MacOS, Darwin
+endif
 
 all: clean prepare $(TARGET) credits
 
@@ -49,21 +57,23 @@ prepare:
 
 # compile
 $(TARGET): main.o wes.o failureGenerator.o transducers.o pfcDisconnectSwitch.o pfc.o utilities.o signals.o
-	$(CC) -o "aeroplanetty" $(OBJDIR)main.o $(OBJDIR)wes.o $(OBJDIR)failureGenerator.o $(OBJDIR)transducers.o $(OBJDIR)pfcDisconnectSwitch.o $(OBJDIR)pfc.o $(OBJDIR)utilities.o $(OBJDIR)signals.o 
-main.o: src/headers/wes.h src/headers/pfcDisconnectSwitch.h src/headers/pfc.h src/headers/transducers.h src/headers/failureGenerator.h src/util/headers/signals.h
-	$(CC) $(CFLAGS) -c  src/main.c -o $(OBJDIR)main.o
-wes.o: src/headers/wes.h src/headers/pfcDisconnectSwitch.h src/util/headers/constant.h src/util/headers/utilities.h
-	$(CC) $(CFLAGS) -c  src/wes.c -o $(OBJDIR)wes.o
-failureGenerator.o: src/headers/failureGenerator.h src/util/headers/utilities.h src/util/headers/constant.h
-	$(CC) $(CFLAGS) -c  src/failureGenerator.c -o $(OBJDIR)failureGenerator.o
-transducers.o: src/headers/transducers.h src/headers/pfc.h
-	$(CC) $(CFLAGS) -c  src/transducers.c -o $(OBJDIR)transducers.o
-pfcDisconnectSwitch.o: src/headers/pfcDisconnectSwitch.h src/headers/pfc.h
-	$(CC) $(CFLAGS) -c  src/pfcDisconnectSwitch.c -o $(OBJDIR)pfcDisconnectSwitch.o
-pfc.o: src/headers/pfc.h src/util/headers/utilities.h src/util/headers/constant.h
-	$(CC) $(CFLAGS) -c  src/pfc.c -o $(OBJDIR)pfc.o
-utilities.o: src/util/headers/utilities.h src/util/headers/constant.h
-	$(CC) $(CFLAGS) -c  src/util/utilities.c -o $(OBJDIR)utilities.o
+	$(CC) -o "aeroplanetty" $(OBJDIR)main.o $(OBJDIR)wes.o $(OBJDIR)failureGenerator.o \
+	$(OBJDIR)transducers.o $(OBJDIR)pfcDisconnectSwitch.o $(OBJDIR)pfc.o \
+	$(OBJDIR)utilities.o $(OBJDIR)signals.o  $(LFLAGS)
+main.o: 
+	$(CC) $(CFLAGS) -c  src/main.c -o $(OBJDIR)main.o $(LFLAGS)
+wes.o: src/headers/wes.h
+	$(CC) $(CFLAGS) -c  src/wes.c -o $(OBJDIR)wes.o $(LFLAGS)
+failureGenerator.o: src/headers/failureGenerator.h
+	$(CC) $(CFLAGS) -c  src/failureGenerator.c -o $(OBJDIR)failureGenerator.o $(LFLAGS)
+transducers.o: src/headers/transducers.h
+	$(CC) $(CFLAGS) -c  src/transducers.c -o $(OBJDIR)transducers.o $(LFLAGS)
+pfcDisconnectSwitch.o: src/headers/pfcDisconnectSwitch.h
+	$(CC) $(CFLAGS) -c  src/pfcDisconnectSwitch.c -o $(OBJDIR)pfcDisconnectSwitch.o $(LFLAGS)
+pfc.o: src/headers/pfc.h
+	$(CC) $(CFLAGS) -c  src/pfc.c -o $(OBJDIR)pfc.o $(LFLAGS)
+utilities.o: src/util/headers/utilities.h
+	$(CC) $(CFLAGS) -c  src/util/utilities.c -o $(OBJDIR)utilities.o $(LFLAGS)
 signals.o: src/util/headers/signals.h
-	$(CC) $(CFLAGS) -c  src/util/signals.c -o $(OBJDIR)signals.o
+	$(CC) $(CFLAGS) -c  src/util/signals.c -o $(OBJDIR)signals.o $(LFLAGS)
 
