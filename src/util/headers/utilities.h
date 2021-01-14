@@ -34,7 +34,7 @@ char *Channel__extendedName(int channelType);
 
 double deg2rad(double);
 
-__unused double rad2deg(double);
+double rad2deg(double);
 
 
 bool strContains(const char *search, const char *content);
@@ -45,7 +45,7 @@ double str2double(char *string);
 
 int strTokenCount(const char *buffer, char token);
 
-__unused int str2i(const char *str);
+int str2i(const char *str);
 
 int random_number(int min_num, int max_num);
 
@@ -63,6 +63,6 @@ void welcomeMessage();
 
 int getIndexOfPFCList(pid_t PFC_pid, pid_t *PFC_list, int position);
 
-__unused int make_named_socket(const char *filename);
+int make_named_socket(const char *filename);
 
 #endif

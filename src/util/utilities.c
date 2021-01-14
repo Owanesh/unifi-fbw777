@@ -46,7 +46,7 @@ double deg2rad(double deg) {
  *  @param rad Radiant value in Double type
  *  @return Degrees value in Double type
 */
-__unused double rad2deg(double rad) {
+double rad2deg(double rad) {
     return (rad * 180 / pi);
 }
 
@@ -69,7 +69,7 @@ double str2double(char *str) {
  *  @return Integer value
  *  @attention if string contains characters this function doesn't work
 */
-__unused int str2i(const char *str) {
+int str2i(const char *str) {
     int num = 0;
     int i = 0;
     bool isNegative = false;
@@ -232,7 +232,7 @@ int getIndexOfPFCList(pid_t PFC_pid, pid_t *PFC_list, int position) {
 *  Creates and returns a named-provided socket
  *  @param filename name of namedSocket
 */
-__unused int make_named_socket(const char *filename) {
+int make_named_socket(const char *filename) {
     unlink(filename);
     struct sockaddr_un sockFile;
     int sock;
