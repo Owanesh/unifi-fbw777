@@ -1,6 +1,6 @@
 #ifndef UNIFI_FBW777_UTILITIES_H
 #define UNIFI_FBW777_UTILITIES_H
-
+#include <sys/types.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>

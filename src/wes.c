@@ -76,7 +76,6 @@ void Wes__openFile(Wes *self, int index, char *fileName) {
 
 _Noreturn void Wes__startReading(Wes *self) {
     double xray, yankee, zulu;
-    double values[3];
     do {
         sleep(1);
         fscanf(self->fileData[0], "%lf", &xray);

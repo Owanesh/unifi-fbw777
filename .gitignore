@@ -1,3 +1,9 @@
+# aeroplanetty
+.bin/
+.log/
+aeroplanetty
+.DS_Store
+
 # Prerequisites
 *.d
 
