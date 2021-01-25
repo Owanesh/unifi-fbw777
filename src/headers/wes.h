@@ -11,7 +11,7 @@
  * At the end, if are all different from each others WES sends an EMERGENCY message to PFCDisconnectSwitch
  */
 typedef struct {
-    FILE *fileData[3];         /**< reference to FILEs, used for reading values from transducers */
+    FILE *dataFiles[3];         /**< reference to FILEs, used for reading values from transducers */
     FILE *logFile;              /**< reference to FILE, used for logging */
     PFCDisconnectSwitch *pds;   /**< pointer to PFCDisconnectSwitch */
 } Wes;

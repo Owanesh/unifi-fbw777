@@ -90,8 +90,8 @@ void PFC__checkFilesize(PFC *self) {
     long prev = ftell(self->filePointer);
     fseek(self->filePointer, 0, SEEK_END); // seek to end of file
     long size = ftell(self->filePointer);
-    if (self->filesize == PFC_RESETVAL) self->filesize = size;
-    if (self->filesize != size) {
+    if (self->fileSize == PFC_RESETVAL) self->fileSize = size;
+    if (self->fileSize != size) {
         fprintf(stderr, "[ERR][PFC][%s]\tFilesize was changed in runtime\n", self->name);
         exit(EXIT_FAILURE);
     }
@@ -104,7 +104,7 @@ void PFC_read(PFC *self) {
     size_t line_buf_size = 0;
     int line_count = 0;
     ssize_t line_size = 0;
-    self->filePointer = fopen(self->filename, "r");
+    self->filePointer = fopen(self->fileName, "r");
     /* Get the first line of the file. */
     while (line_size >= 0) {
         line_size = getline(&line_buf, &line_buf_size, self->filePointer);
@@ -134,8 +134,8 @@ void PFC__init(PFC *self, char *filename, char *name) {
     if (!fileExists(filename)) {
         fprintf(stderr, "[ERR][PFC]\tError during file opening '%s'\n", filename);
     } else {
-        self->filename = filename;
-        self->filesize = FILESIZE_RESET;
+        self->fileName = filename;
+        self->fileSize = FILESIZE_RESET;
     }
 }
 
@@ -167,8 +167,8 @@ void PFC__backupFPointer(PFC *self) {
 void PFC__reset(PFC *self) {
     if (self->filePointer != NULL) {
         fclose(self->filePointer);
-        self->filesize = FILESIZE_RESET;
-        self->filename = "";
+        self->fileSize = FILESIZE_RESET;
+        self->fileName = "";
         self->seekPoint = FILESIZE_RESET;
     }
     self->latitudes[0] = PFC_RESETVAL;

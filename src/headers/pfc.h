@@ -25,8 +25,8 @@ typedef struct PFC {
                              *will do a leftshift of two bits on speed value*/
     long seekPoint;     /**< reference of last seek-point. Useful to compare with other PFC reading position */
     FILE *filePointer;  /**< reference to FILE, used for reading */
-    char *filename;     /**< referenced to filePointer, used for logging */
-    long filesize;      /**< this is an automatic value that is checked in runtime to determines if size of File
+    char *fileName;     /**< referenced to filePointer, used for logging */
+    long fileSize;      /**< this is an automatic value that is checked in runtime to determines if size of File
                              * pointed by PFC reads, is changed */
     double latitudes[2];/**< saves last latitude read an actual latitude */
     double longitudes[2];/**< saves last longitude read an actual longitude */

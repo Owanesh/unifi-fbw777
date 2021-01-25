@@ -19,7 +19,7 @@
  *  Notice: Each signal has it own probability to be chose
 */
 typedef struct {
-    FILE *log_file;     /**< reference to FILE, used for logging */
+    FILE *logFile;     /**< reference to FILE, used for logging */
     pid_t selfPid;      /**< a copy of pid of process who runs this code */
     PFC **PFC_list[3];  /**< references to three PFC, useful to implement an easier workflow.
                              * Sending signals or reading metadata of PFC*/

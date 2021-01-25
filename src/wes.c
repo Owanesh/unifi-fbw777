@@ -15,15 +15,15 @@
 #define WES_MSG_EMERGENCY "Emergency alert | WES obtained three different values"
 
 /**
-*  Initialize all Wes.fileNames and every Wes.fileData
+*  Initialize all Wes.fileNames and every Wes.dataFiles
  * @param self reference to self "object" in memory
  */
 void Wes__init(Wes *self);
 
 /**
-*  Initialize a filePointer in READ mode on provided FileName ad stores it into fileData attribute of Wes
+*  Initialize a filePointer in READ mode on provided FileName ad stores it into dataFiles attribute of Wes
  * @param self  reference to self "object" in memory
- * @param index  of array of fileData
+ * @param index  of array of dataFiles
  * @param fileName  Filename of file that will be opened
  */
 void Wes__openFile(Wes *self, int index, char *fileName);
@@ -65,8 +65,8 @@ void Wes__openFile(Wes *self, int index, char *fileName) {
     while (!fileExists(fileName)) {
         fprintf(stderr, "[ERR][WES]\tCould not load file %s\n", fileName);
     }
-    self->fileData[index] = fopen(fileName, "r");
-    if (!self->fileData[index]) {
+    self->dataFiles[index] = fopen(fileName, "r");
+    if (!self->dataFiles[index]) {
         perror("[ERR][WES]\tError during opening file");
         exit(EXIT_FAILURE);
     }
@@ -78,11 +78,11 @@ _Noreturn void Wes__startReading(Wes *self) {
     double xray, yankee, zulu;
     do {
         sleep(1);
-        fscanf(self->fileData[0], "%lf", &xray);
+        fscanf(self->dataFiles[0], "%lf", &xray);
         printf("wes is now reading from speedPFC%d value %f\n", 1, xray);
-        fscanf(self->fileData[1], "%lf", &yankee);
+        fscanf(self->dataFiles[1], "%lf", &yankee);
         printf("wes is now reading from speedPFC%d value %f\n", 2, yankee);
-        fscanf(self->fileData[2], "%lf", &zulu);
+        fscanf(self->dataFiles[2], "%lf", &zulu);
         printf("wes is now reading from speedPFC%d value %f\n", 3, zulu);
         fflush(stdout);
         Wes__compareAndLog(self, xray, yankee, zulu);

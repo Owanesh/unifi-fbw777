@@ -24,7 +24,7 @@ bool isProbability(int maxLimit, short alpha);
 bool isSignalSentTo(int signum, int probability, pid_t destinationProcess);
 
 /**
-*  Log a signal number into self.log_file
+*  Log a signal number into self.logFile
 *  @param self : reference to self "object" in memory
 *  @param pfc : reference to PFC who has received signal
 *  @param signum : integer number, it's the signal number
@@ -100,9 +100,9 @@ bool isSignalSentTo(int signum, int probability, pid_t destinationProcess) {
 
 void logEvent(FailureGen *self, PFC *pfc, int signum) {
     if (fileExists(FAILUREGEN_LOGFILE)) {
-        self->log_file = fopen(FAILUREGEN_LOGFILE, "a");
+        self->logFile = fopen(FAILUREGEN_LOGFILE, "a");
     } else {
-        self->log_file = fopen(FAILUREGEN_LOGFILE, "w");
+        self->logFile = fopen(FAILUREGEN_LOGFILE, "w");
     }
     char *extendedNameOfSignal;
     switch (signum) {
@@ -119,16 +119,16 @@ void logEvent(FailureGen *self, PFC *pfc, int signum) {
             extendedNameOfSignal = "SIGUSR1";
             break;
     }
-    fprintf(self->log_file, "%d\t%s\t%d [%s]\n", pfc->selfPid, pfc->name, signum, extendedNameOfSignal);
-    fclose(self->log_file);
+    fprintf(self->logFile, "%d\t%s\t%d [%s]\n", pfc->selfPid, pfc->name, signum, extendedNameOfSignal);
+    fclose(self->logFile);
 }
 
 void failureGenerator_initFileLog(FailureGen *self) {
     unlink(FAILUREGEN_LOGFILE);
-    self->log_file = fopen(FAILUREGEN_LOGFILE, "w");
-    fprintf(self->log_file, "------------------------\n");
-    fprintf(self->log_file, "Process\tName\tSignal\n");
-    fclose(self->log_file);
+    self->logFile = fopen(FAILUREGEN_LOGFILE, "w");
+    fprintf(self->logFile, "------------------------\n");
+    fprintf(self->logFile, "Process\tName\tSignal\n");
+    fclose(self->logFile);
 }
 
 void sendAndLog(FailureGen *self, int signum, PFC *destinationProcess) {

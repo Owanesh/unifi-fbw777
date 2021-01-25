@@ -178,7 +178,19 @@ int random_number(int min_num,/**< min number allowed for a random value */
 /**
 *  This function prints only an header for this program
 */
+
+
+#if defined(__unix__) || defined(__unix)        
+#define OS_linux
+#elif defined(__APPLE__) || defined(__MACH__) 
+#define OS_apple
+#endif
 void welcomeMessage() {
+    #ifdef OS_apple
+printf("IM ON MAC\n");
+#else 
+printf("IM ON LINUXX\n");
+#endif  
     printf("\033[0;35m");
     printf("\n"
            "┌─┐┬ ┬ ┬┌┐ ┬ ┬┬ ┬┬┬─┐┌─┐\n"
@@ -191,7 +203,7 @@ void welcomeMessage() {
 }
 
 /**
-*  Gets filename by argv array passed to application
+*  Gets fileName by argv array passed to application
 *   ./aeroplanetty <filepath_g18.tx>
 *      if filepath is invalid or file does not exist, will use
 *      internal file stored in /resources/G18.txt
@@ -209,7 +221,7 @@ char *checkFileIntoMainArgs(int argc, char *argv[]) {
     } else {
         printf("No external G18 was provided - Using default...\n");
     }
-    return "../resources/G18.txt";
+    return "resources/G18.txt";
 }
 
 /**

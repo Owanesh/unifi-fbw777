@@ -8,7 +8,7 @@
  *  of three PFC and stares them into logfiles
 */
 typedef struct {
-    FILE *log_files[3];              /**< reference to FILEs, used for logging */
+    FILE *logFiles[3];              /**< reference to FILEs, used for logging */
     Channel communicationChannel;    /**< a communication channel with PFC */
 } Transducer;
 

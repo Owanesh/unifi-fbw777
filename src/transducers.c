@@ -12,9 +12,7 @@ void transducer__speedLog(Transducer *self, int indexLogFile, char *fileName, do
 void Transducer__init(Transducer *self) {
     // set headers of logfiles
     transducer__initFileLog(self, 0, TRANSDUCERS_LOGFILE1);
-
     transducer__initFileLog(self, 1, TRANSDUCERS_LOGFILE2);
-
     transducer__initFileLog(self, 2, TRANSDUCERS_LOGFILE3);
 }
 
@@ -35,7 +33,7 @@ void transducer__readFromChannel(Transducer *self, int channel, int channelType,
                                      fileName,
                                      res);
             }
-        }// else read from file
+        }
     } while (res >= 0);
 }
 
@@ -93,8 +91,8 @@ Transducer *Transducer__create() {
 /** Utilities :*/
 void transducer__initFileLog(Transducer *self, int indexLogFile, const char *fileName) {
     unlink(fileName);
-    self->log_files[indexLogFile] = fopen(fileName, "w");
-    fclose(self->log_files[indexLogFile]);
+    self->logFiles[indexLogFile] = fopen(fileName, "w");
+    fclose(self->logFiles[indexLogFile]);
 }
 
 void Transducer__setCommunicationChannel(Transducer *self, int channel, int channelType) {
@@ -109,10 +107,10 @@ void Transducer__setCommunicationChannel(Transducer *self, int channel, int chan
 }
 
 void transducer__speedLog(Transducer *self, int indexLogFile, char *fileName, double PFCSpeed) {
-    self->log_files[indexLogFile] = fopen(fileName, "a");
-    fprintf(self->log_files[indexLogFile], "%f\n", PFCSpeed);
-    fflush(self->log_files[indexLogFile]);
-    fclose(self->log_files[indexLogFile]);
+    self->logFiles[indexLogFile] = fopen(fileName, "a");
+    fprintf(self->logFiles[indexLogFile], "%f\n", PFCSpeed);
+    fflush(self->logFiles[indexLogFile]);
+    fclose(self->logFiles[indexLogFile]);
 }
 
 
