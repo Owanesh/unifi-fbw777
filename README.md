@@ -1,6 +1,16 @@
 # Fly by wire 
-### Compile it
-#### Make
+![Aeroplanetty CI](https://github.com/Owanesh/unifi-fbw777/workflows/Aeroplanetty%20CI/badge.svg)
+
+#### Preface
+The purpose of this project is to replicate an unstable and unaffidable -fly-by-wire- system used on Boeing777.
+The main scope is to demonstrate how processes can communicate each others.
+
+This repository is created only for the exam and will be no longer mantained.
+### Project design
+![ProjectSchema](https://raw.githubusercontent.com/Owanesh/unifi-fbw777/main/resources/concept-schema.jpg)
+
+## Technical stuff
+### Compile and run
 ```shell
 make
 ```
