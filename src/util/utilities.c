@@ -178,19 +178,7 @@ int random_number(int min_num,/**< min number allowed for a random value */
 /**
 *  This function prints only an header for this program
 */
-
-
-#if defined(__unix__) || defined(__unix)        
-#define OS_linux
-#elif defined(__APPLE__) || defined(__MACH__) 
-#define OS_apple
-#endif
 void welcomeMessage() {
-    #ifdef OS_apple
-printf("IM ON MAC\n");
-#else 
-printf("IM ON LINUXX\n");
-#endif  
     printf("\033[0;35m");
     printf("\n"
            "┌─┐┬ ┬ ┬┌┐ ┬ ┬┬ ┬┬┬─┐┌─┐\n"

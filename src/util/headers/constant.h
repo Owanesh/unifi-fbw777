@@ -34,4 +34,11 @@
 /** Log filepath for PFC#3*/
 #define TRANSDUCERS_LOGFILE3 ".log/speedPFC3.log"
 
+/** Macro for detect if is running on unix machine */
+#if defined(__unix__) || defined(__unix)
+#define OS_linux
+/** Macro for detect if is running on apple/mac machine */
+#elif defined(__APPLE__) || defined(__MACH__)
+#define OS_apple
+#endif
 #endif
