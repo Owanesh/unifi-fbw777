@@ -6,12 +6,15 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
 /**
  * LogAction allows to save every stdout output into file
  *  @param self Reference to PFCDisconnectSwitch object
- *  @param action a message that will be stored into file
+ *  @param process processID
+ *  @param status a char that identifies status of process
+ *  @param explanation a brief description of status
  */
-void PDS__logAction(PFCDisconnectSwitch *self, char *action);
+void PDS__logAction(PFCDisconnectSwitch *self, pid_t process, char status, char *explanation);
 
 /**
  * By a provided pid, this function runs a `ps` command on shell and parse
@@ -65,34 +68,32 @@ void pds__handleMessage(PFCDisconnectSwitch *self, int typeOfMessage, int extraI
         (*self->PFC_list[extraInfo])->seekPoint =
                 (*self->PFC_list[nextPfc])->seekPoint;
         char statusOfPidToRestart = checkStatusOf(processPid);
-
         if (!statusOfPidToRestart) {
-            printf("[PFCDS]\tProcess %d\tUnknown status, maybe received a SIGINT signal or maybe isn't started at all \n", processPid);
-        }
-        else if (statusOfPidToRestart == 'T') {
-            printf("[PFCDS]\tProcess %d\tStopped by job control signal\t[SIGSTOP] \n", processPid);
-            PFC__reset(*self->PFC_list[extraInfo]);
-            PFC_read((*self->PFC_list[extraInfo]));
-            printf("[PFCDS]\tProcess %d\tReceived now a new SIGCONT\n", processPid);
+            PDS__logAction(self, processPid, '~',
+                           "Unknown status, maybe received a SIGINT signal or maybe isn't started at all");
+        } else if (statusOfPidToRestart == 'T') {
+            PDS__logAction(self, processPid, statusOfPidToRestart, "Stopped by job control signal	[SIGSTOP]");
         }
         switch (statusOfPidToRestart) {
             case 'S':
-                printf("[PFCDS]\tProcess %d\tInterruptible sleep (waiting for an event to complete)\n", processPid);
+                PDS__logAction(self, processPid, statusOfPidToRestart,
+                               "Interruptible sleep (waiting for an event to complete)");
                 break;
             case 'D':
-                printf("[PFCDS]\tProcess %d\tUninterruptible sleep (usually IO)", processPid);
+                PDS__logAction(self, processPid, statusOfPidToRestart, "Uninterruptible sleep (usually IO)");
                 break;
             case 'R':
-                printf("[PFCDS]\tProcess %d\tPaging (not valid since the 2.6.xx kernel)", processPid);
+                PDS__logAction(self, processPid, statusOfPidToRestart, "Paging (not valid since the 2.6.xx kernel)");
                 break;
             case 'W':
-                printf("[PFCDS]\tProcess %d\tRunning or runnable (on run queue)", processPid);
+                PDS__logAction(self, processPid, statusOfPidToRestart, "Running or runnable (on run queue)");
                 break;
             case 'X':
-                printf("[PFCDS]\tProcess %d\tDead (should never be seen)", processPid);
+                PDS__logAction(self, processPid, statusOfPidToRestart, "Dead (should never be seen)");
                 break;
             case 'Z':
-                printf("[PFCDS]\tProcess %d\tDefunct ('zombie') process, terminated but not reaped by its parent", processPid);
+                PDS__logAction(self, processPid, statusOfPidToRestart,
+                               "Defunct ('zombie') process, terminated but not reaped by its parent");
                 break;
         }
     }
@@ -100,20 +101,20 @@ void pds__handleMessage(PFCDisconnectSwitch *self, int typeOfMessage, int extraI
 
 PFCDisconnectSwitch *PDS__create(PFC *PFC_list[3]) {
     PFCDisconnectSwitch *pds =
-            (PFCDisconnectSwitch *)malloc(sizeof(PFCDisconnectSwitch));
+            (PFCDisconnectSwitch *) malloc(sizeof(PFCDisconnectSwitch));
     pds->PFC_list[0] = &PFC_list[0];
     pds->PFC_list[1] = &PFC_list[1];
     pds->PFC_list[2] = &PFC_list[2];
-
+    unlink(PFCLS_LOGFILE);
     return pds;
 }
 
-void PDS__logAction(PFCDisconnectSwitch *self, char *action) {
+void PDS__logAction(PFCDisconnectSwitch *self, pid_t process, char status, char *explanation) {
     if (fileExists(PFCLS_LOGFILE)) {
         self->logFile = fopen(PFCLS_LOGFILE, "a");
     } else {
         self->logFile = fopen(PFCLS_LOGFILE, "w");
     }
-    fprintf(self->logFile, "%s\n", action);
+    fprintf(self->logFile, "%d\t%c %s\n", process, status, explanation);
     fclose(self->logFile);
 }

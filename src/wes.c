@@ -79,11 +79,11 @@ _Noreturn void Wes__startReading(Wes *self) {
     do {
         sleep(1);
         fscanf(self->dataFiles[0], "%lf", &xray);
-        printf("wes is now reading from speedPFC%d value %f\n", 1, xray);
+        //printf("wes is now reading from speedPFC%d value %f\n", 1, xray);
         fscanf(self->dataFiles[1], "%lf", &yankee);
-        printf("wes is now reading from speedPFC%d value %f\n", 2, yankee);
+        //printf("wes is now reading from speedPFC%d value %f\n", 2, yankee);
         fscanf(self->dataFiles[2], "%lf", &zulu);
-        printf("wes is now reading from speedPFC%d value %f\n", 3, zulu);
+        //printf("wes is now reading from speedPFC%d value %f\n", 3, zulu);
         fflush(stdout);
         Wes__compareAndLog(self, xray, yankee, zulu);
     } while (true);
