@@ -74,13 +74,14 @@ void gpgll2PFCParameters(char *line, PFC *self) {
                        str2double((char *) splittedLineBuffer[1]),
                        str2double((char *) splittedLineBuffer[3]),
                        atol((char *) splittedLineBuffer[5]))) {
-        double speed = speedBetweenPoints(self->timestamps[0],
-                                          self->timestamps[1],
-                                          self->param.distance);
+
         double distance = distanceBetweenPoints(self->latitudes[0],
                                                 self->longitudes[0],
                                                 self->latitudes[1],
                                                 self->longitudes[1]);
+        double speed = speedBetweenPoints(self->timestamps[0],
+                                          self->timestamps[1],
+                                          distance);
         PFCParameter__update(self, speed, distance);
     }
 }
@@ -152,7 +153,7 @@ void PFC__destroy(PFC *self) {
         printf("Destroying %s PFC who has pid %d \n", self->name, self->selfPid);
         PFC__reset(self);
         free(self);
-        kill(self->selfPid,SIGQUIT);
+        kill(self->selfPid, SIGQUIT);
     }
     exit(0);
 }

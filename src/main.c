@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
             }
             if (!(trans_file = fork())) {
                 int fileDescriptor;
-                if ((fileDescriptor = open(TRANPFC_FILE, O_RDONLY)) < 0)  /* -1 signals an error */
+                if ((fileDescriptor = open(TRANPFC_FILE, O_RDONLY)) < 0)  // -1 signals an error
                 {
                     perror("[ERR][Transducer]\tCan't open file");
                     exit(0);
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
             exit(0);
 
         }
-        if (!(wes_pid = fork())) {
+       if (!(wes_pid = fork())) {
             PFCDisconnectSwitch *pds;
             pds = PDS__create(PFC_list);
 
@@ -168,5 +168,3 @@ int main(int argc, char *argv[]) {
     }
     return 0;
 }
-
-// TODO: Handle SIGTERM and remove all temp files before quit

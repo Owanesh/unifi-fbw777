@@ -9,9 +9,6 @@
 #include "headers/utilities.h"
 #include "headers/constant.h"
 
-/** Pi Greco approx */
-#define pi 3.14159265358979323846
-
 /**
 *  South latitudes are negative, east longitudes are positive
  *  @param lat1 Latitude of point 1 (in decimal degrees)
@@ -22,11 +19,15 @@
 double distanceBetweenPoints(double lat1, double lon1, double lat2, double lon2) {
     double earthRadius_km = EARTH_RADIUS * 1e3;
     double diffLat, diffLon, radLat1, radLat2, alpha, bravo, charlie;
+    lat1 = (lat1/10)>100?lat1/100:lat1;
+    lon1 = (lon1/10)>100?lon1/100:lon1;
+    lat2 = (lat2/10)>100?lat2/100:lat2;
+    lon2 = (lon2/10)>100?lon2/100:lon2;
     diffLat = deg2rad(lat2 - lat1);
     diffLon = deg2rad(lon2 - lon1);
     radLat1 = deg2rad(lat1);
     radLat2 = deg2rad(lat2);
-    alpha = sin(diffLat / 2) * sin(diffLat / 2) + cos(radLat1) * cos(radLat2) * sin(diffLon / 2) * sin(diffLon / 2);
+    alpha = sin(diffLat / 2) * sin(diffLat / 2) + sin(diffLon / 2) * sin(diffLon / 2) * cos(radLat1) * cos(radLat2);
     bravo = 2 * atan2(sqrt(alpha), sqrt(1 - alpha));
     charlie = earthRadius_km * bravo;
     return charlie;
@@ -38,7 +39,7 @@ double distanceBetweenPoints(double lat1, double lon1, double lat2, double lon2)
  *  @return Radiant value in Double type
 */
 double deg2rad(double deg) {
-    return (deg * pi / 180);
+    return ((deg * M_PI )/ 180);
 }
 
 /**
@@ -47,7 +48,7 @@ double deg2rad(double deg) {
  *  @return Degrees value in Double type
 */
 double rad2deg(double rad) {
-    return (rad * 180 / pi);
+    return ((rad * 180) / M_PI);
 }
 
 /**
